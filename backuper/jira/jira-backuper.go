@@ -132,7 +132,7 @@ func (b *JiraBackuper) Backup() error {
 	}
 
 	log.Info("Backup is ready for download, fetching file…")
-	log.Info("Writting backup file into %s", b.config.OutputFile)
+	log.Info("Writing backup file into %s", b.config.OutputFile)
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_SAVING, nil)
 
@@ -271,7 +271,7 @@ func (b *JiraBackuper) downloadBackup(backupFile string) error {
 	_, err = io.Copy(w, resp.Body)
 
 	if err != nil {
-		return fmt.Errorf("File writting error: %w", err)
+		return fmt.Errorf("File writing error: %w", err)
 	}
 
 	w.Flush()
