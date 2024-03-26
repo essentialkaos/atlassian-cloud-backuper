@@ -8,8 +8,8 @@
 
 ################################################################################
 
-Summary:        atlassian-cloud-backuper
-Name:           Tool for backuping Atlassian cloud services
+Summary:        Tool for backuping Atlassian cloud services
+Name:           atlassian-cloud-backuper
 Version:        0.0.1
 Release:        0%{?dist}
 Group:          Applications/System
@@ -53,8 +53,7 @@ rm -rf %{buildroot}
 
 install -dDm 755 %{buildroot}%{_bindir}
 install -dDm 755 %{buildroot}%{_sysconfdir}/logrotate.d
-install -dDm 755 %{buildroot}%{_logdir}/%{name}
-install -dDm 755 %{buildroot}%{_mandir}/man1
+install -dDm 755 %{buildroot}%{_localstatedir}/log/%{name}
 
 install -pm 755 %{name}/%{name} \
                 %{buildroot}%{_bindir}/
@@ -65,10 +64,26 @@ install -pm 644 %{name}/common/%{name}.knf \
 install -pm 644 %{name}/common/%{name}.logrotate \
                 %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
 
+install -pDm 644 %{name}/common/%{name}.cron \
+                 %{buildroot}%{_sysconfdir}/cron.d/%{name}
+
+install -pDm 644 %{name}/common/%{name}-confluence.service \
+                 %{buildroot}%{_unitdir}/%{name}-confluence.service
+install -pDm 644 %{name}/common/%{name}-confluence.service \
+                 %{buildroot}%{_unitdir}/%{name}-confluence.timer
+install -pDm 644 %{name}/common/%{name}-jira.service \
+                 %{buildroot}%{_unitdir}/%{name}-jira.service
+install -pDm 644 %{name}/common/%{name}-jira.service \
+                 %{buildroot}%{_unitdir}/%{name}-jira.timer
+
 # Generate man page
+install -dDm 755 %{buildroot}%{_mandir}/man1
 ./%{name}/%{name} --generate-man > %{buildroot}%{_mandir}/man1/%{name}.1
 
 # Generate completions
+install -dDm 755 %{buildroot}%{_sysconfdir}/bash_completion.d
+install -dDm 755 %{buildroot}%{_datadir}/zsh/site-functions
+install -dDm 755 %{buildroot}%{_datarootdir}/fish/vendor_completions.d
 ./%{name}/%{name} --completion=bash 1> %{buildroot}%{_sysconfdir}/bash_completion.d/%{name}
 ./%{name}/%{name} --completion=zsh 1> %{buildroot}%{_datadir}/zsh/site-functions/_%{name}
 ./%{name}/%{name} --completion=fish 1> %{buildroot}%{_datarootdir}/fish/vendor_completions.d/%{name}.fish
@@ -80,10 +95,12 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc LICENSE
-%dir %{_logdir}/%{name}
+%doc %{name}/LICENSE
+%dir %{_localstatedir}/log/%{name}
 %config(noreplace) %{_sysconfdir}/%{name}.knf
 %config(noreplace) %{_sysconfdir}/logrotate.d/%{name}
+%config(noreplace) %{_unitdir}/%{name}-*
+%config(noreplace) %{_sysconfdir}/cron.d/%{name}
 %{_bindir}/%{name}
 %{_mandir}/man1/%{name}.1.*
 %{_sysconfdir}/bash_completion.d/%{name}
@@ -93,5 +110,5 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
-* Mon Mar 04 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.1-0
+* Tue Mar 26 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.1-0
 - Initial build for kaos-repo

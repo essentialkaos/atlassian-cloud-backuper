@@ -8,7 +8,7 @@ HOME=/srv/atlassian-backups
 ################################################################################
 
 # Backup Jira data
-0 3 * * Sun root atlassian-cloud-backuper jira &> /dev/null || :
+# 0 3 * * Sun root atlassian-cloud-backuper jira &> /dev/null || :
 
 # Backup Confluence data
-0 9 * * Sun root atlassian-cloud-backuper confluence &> /dev/null || :
+# 0 9 * * Sun root atlassian-cloud-backuper confluence &> /dev/null || :
