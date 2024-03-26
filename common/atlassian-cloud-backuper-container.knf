@@ -1,0 +1,104 @@
+[access]
+
+  # Account name
+  account:
+
+  # User email with access to API
+  email:
+
+  # API key
+  api-key:
+
+[storage]
+
+  # Storage type (fs/sftp/s3)
+  type:
+
+[storage-fs]
+
+  # Path to directory with backups
+  path:
+
+  # Mode for all files
+  mode:
+
+[storage-sftp]
+
+  # SFTP Hostname or IP with port
+  host:
+
+  # Name of user on SFTP storage
+  user:
+
+  # Path to private key
+  key:
+
+  # Path to directory with backups
+  path:
+
+  # Mode for all files
+  mode:
+
+[storage-s3]
+
+  # Name of host with Amazon S3 HTTP API compatible endpoint
+  host:
+
+  # S3 region
+  region:
+
+  # Access key ID
+  access-key:
+
+  # Secret access key
+  secret-key:
+
+  # Name of bucket
+  bucket:
+
+  # Path to directory with backups
+  path:
+
+[jira]
+  
+  # Backup file name with date tags (default: jira-backup-%Y-%m-%d.zip)
+  output-file:
+
+  # Include attachments to backup
+  include-attachments: true
+
+  # Export to the cloud format
+  cloud-format: true
+
+[confluence]
+  
+  # Backup file name with date tags (default: confluence-backup-%Y-%m-%d.zip)
+  output-file:
+
+  # Include attachments to backup
+  include-attachments: true
+
+  # Export to the cloud format
+  cloud-format: true
+
+[temp]
+
+  # Path to directory for temporary data
+  dir: /tmp
+
+[log]
+
+  # Log file dir
+  dir:
+
+  # Path to log file
+  file:
+
+  # Log format (text/json)
+  format: json
+
+  # Log file mode
+  mode: 600
+
+  # Default log level (debug/info/warn/error/crit)
+  level: info
