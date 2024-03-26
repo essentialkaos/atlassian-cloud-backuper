@@ -1,4 +1,4 @@
-<p align="center"><a href="#readme"><img src="https://gh.kaos.st/atlassian-cloud-backuper.png" /></a></p>
+<p align="center"><a href="#readme"><img src="https://gh.kaos.st/atlassian-cloud-backuper.svg" /></a></p>
 
 <p align="center">
   <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://kaos.sh/w/atlassian-cloud-backuper/ci.svg" alt="GitHub Actions CI Status" /></a>
@@ -22,23 +22,60 @@ sudo yum install atlassian-cloud-backuper
 ```
 
 ### Usage
+
+#### Standalone
 ```
 Usage: atlassian-cloud-backuper {options} target
 
 Options
 
+  --config, -c file    Path to configuration file
   --interactive, -I    Interactive mode
   --no-color, -nc      Disable colors in output
   --help, -h           Show this help message
   --version, -v        Show version
+```
 
-Examples
+#### Container
 
-  atlassian-cloud-backuper jira
-  Create backup of Jira data
+If `atlassian-cloud-backuper` runs inside a container, it allows you to use united configuration (_knf file + options + environment variables_).
 
-  atlassian-cloud-backuper confluence
-  Create backup of Confluence data
+```
+Usage: atlassian-cloud-backuper {options} target
+
+Options
+
+  --config, -c file                          Path to configuration file
+  --interactive, -I                          Interactive mode
+  --no-color, -nc                            Disable colors in output
+  --help, -h                                 Show this help message
+  --version, -v                              Show version
+
+  --access-account name                      Account name (ACCESS_ACCOUNT)
+  --access-email email                       User email with access to API (ACCESS_EMAIL)
+  --access-api-key key                       API key (ACCESS_API_KEY)
+  --storage-type fs/sftp/s3                  Storage type (STORAGE_TYPE)
+  --storage-fs-path path                     Path on system for backups (STORAGE_FS_PATH)
+  --storage-fs-mode mode                     File mode on system (STORAGE_FS_MODE)
+  --storage-sftp-host host                   SFTP host (STORAGE_SFTP_HOST)
+  --storage-sftp-user name                   SFTP user name (STORAGE_SFTP_USER)
+  --storage-sftp-key key                     SFTP user private key (STORAGE_SFTP_KEY)
+  --storage-sftp-path path                   Path on SFTP (STORAGE_SFTP_PATH)
+  --storage-sftp-mode mode                   File mode on SFTP (STORAGE_SFTP_MODE)
+  --storage-s3-host host                     S3 host (STORAGE_S3_HOST)
+  --storage-s3-access-key id                 S3 access key ID (STORAGE_S3_ACCESS_KEY)
+  --storage-s3-secret-key key                S3 access secret key (STORAGE_S3_SECRET_KEY)
+  --storage-s3-bucket name                   S3 bucket (STORAGE_S3_BUCKET)
+  --storage-s3-path path                     Path for backups (STORAGE_S3_PATH)
+  --jira-output-file template                Jira backup output file name template (JIRA_OUTPUT_FILE)
+  --jira-include-attachments yes/no          Include attachments to Jira backup (JIRA_INCLUDE_ATTACHMENTS)
+  --jira-cloud-format yes/no                 Create Jira backup for Cloud (JIRA_CLOUD_FORMAT)
+  --confluence-output-file template          Confluence backup output file name template (CONFLUENCE_OUTPUT_FILE)
+  --confluence-include-attachments yes/no    Include attachments to Confluence backup (CONFLUENCE_INCLUDE_ATTACHMENTS)
+  --confluence-cloud-format yes/no           Create Confluence backup for Cloud (CONFLUENCE_CLOUD_FORMAT)
+  --temp-dir path                            Path to directory for temporary data (TEMP_DIR)
+  --log-format text/json                     Log format (LOG_FORMAT)
+  --log-level level                          Log level (LOG_LEVEL)
 ```
 
 ### CI Status
