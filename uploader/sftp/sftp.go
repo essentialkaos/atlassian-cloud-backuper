@@ -87,6 +87,16 @@ func (u *SFTPUploader) Upload(file string) error {
 
 	defer sftpClient.Close()
 
+	_, err = sftpClient.Stat(u.config.Path)
+
+	if err != nil {
+		err = sftpClient.MkdirAll(u.config.Path)
+
+		if err != nil {
+			return fmt.Errorf("Can't create directory for backup: %v", err)
+		}
+	}
+
 	outputFD, err := sftpClient.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
 
 	if err != nil {

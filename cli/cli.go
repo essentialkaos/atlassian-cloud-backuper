@@ -429,7 +429,7 @@ func process(target string) bool {
 
 	log.Info("Backup process successfully finished!")
 
-	updr, err := getUploader()
+	updr, err := getUploader(target)
 
 	if err != nil {
 		log.Crit("Can't start uploading process: %v", err)
@@ -510,14 +510,14 @@ func getBackuperConfig(target string) (*backuper.Config, error) {
 }
 
 // getUploader returns uploader instance
-func getUploader() (uploader.Uploader, error) {
+func getUploader(target string) (uploader.Uploader, error) {
 	var err error
 	var updr uploader.Uploader
 
 	switch knfu.GetS(STORAGE_TYPE) {
 	case "fs":
 		updr, err = fs.NewUploader(&fs.Config{
-			Path: knfu.GetS(STORAGE_FS_PATH),
+			Path: path.Join(knfu.GetS(STORAGE_FS_PATH), target),
 			Mode: knfu.GetM(STORAGE_FS_MODE, 0600),
 		})
 
@@ -532,7 +532,7 @@ func getUploader() (uploader.Uploader, error) {
 			Host: knfu.GetS(STORAGE_SFTP_HOST),
 			User: knfu.GetS(STORAGE_SFTP_USER),
 			Key:  keyData,
-			Path: knfu.GetS(STORAGE_SFTP_PATH),
+			Path: path.Join(knfu.GetS(STORAGE_SFTP_PATH), target),
 			Mode: knfu.GetM(STORAGE_SFTP_MODE, 0600),
 		})
 
@@ -543,7 +543,7 @@ func getUploader() (uploader.Uploader, error) {
 			AccessKeyID: knfu.GetS(STORAGE_S3_ACCESS_KEY),
 			SecretKey:   knfu.GetS(STORAGE_S3_SECRET_KEY),
 			Bucket:      knfu.GetS(STORAGE_S3_BUCKET),
-			Path:        knfu.GetS(STORAGE_S3_PATH),
+			Path:        path.Join(knfu.GetS(STORAGE_S3_PATH), target),
 		})
 	}
 

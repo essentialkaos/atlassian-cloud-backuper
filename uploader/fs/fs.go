@@ -67,6 +67,14 @@ func (u *FSUploader) Upload(file string) error {
 		return err
 	}
 
+	if !fsutil.IsExist(u.config.Path) {
+		err = os.MkdirAll(u.config.Path, 0750)
+
+		if err != nil {
+			return fmt.Errorf("Can't create directory for backup: %v", err)
+		}
+	}
+
 	fileName := path.Base(file)
 
 	err = fsutil.CopyFile(file, path.Join(u.config.Path, fileName), u.config.Mode)
