@@ -81,6 +81,8 @@ func (u *FSUploader) Upload(file string) error {
 
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "FS")
 
+	log.Info("Backup successfully copied to %s", u.config.Path)
+
 	return err
 }
 
