@@ -708,7 +708,7 @@ func genUsage() *usage.Info {
 		addUnitedOption(info, STORAGE_FS_MODE, "File mode on system", "mode")
 		addUnitedOption(info, STORAGE_SFTP_HOST, "SFTP host", "host")
 		addUnitedOption(info, STORAGE_SFTP_USER, "SFTP user name", "name")
-		addUnitedOption(info, STORAGE_SFTP_KEY, "SFTP user private key", "key")
+		addUnitedOption(info, STORAGE_SFTP_KEY, "Base64-encoded private key", "key")
 		addUnitedOption(info, STORAGE_SFTP_PATH, "Path on SFTP", "path")
 		addUnitedOption(info, STORAGE_SFTP_MODE, "File mode on SFTP", "mode")
 		addUnitedOption(info, STORAGE_S3_HOST, "S3 host", "host")

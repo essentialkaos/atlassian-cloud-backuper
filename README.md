@@ -71,7 +71,7 @@ Options
   --storage-fs-mode mode                     File mode on system (STORAGE_FS_MODE)
   --storage-sftp-host host                   SFTP host (STORAGE_SFTP_HOST)
   --storage-sftp-user name                   SFTP user name (STORAGE_SFTP_USER)
-  --storage-sftp-key key                     SFTP user private key (STORAGE_SFTP_KEY)
+  --storage-sftp-key key                     Base64-encoded private key (STORAGE_SFTP_KEY)
   --storage-sftp-path path                   Path on SFTP (STORAGE_SFTP_PATH)
   --storage-sftp-mode mode                   File mode on SFTP (STORAGE_SFTP_MODE)
   --storage-s3-host host                     S3 host (STORAGE_S3_HOST)
