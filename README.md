@@ -21,6 +21,18 @@ sudo yum install -y https://pkgs.kaos.st/kaos-repo-latest.el$(grep 'CPE_NAME' /e
 sudo yum install atlassian-cloud-backuper
 ```
 
+#### Prebuilt binaries
+
+You can download prebuilt binaries for Linux from [EK Apps Repository](https://apps.kaos.st/atlassian-cloud-backuper/latest):
+
+```bash
+bash <(curl -fsSL https://apps.kaos.st/get) atlassian-cloud-backuper
+```
+
+#### Container Image
+
+The latest version of `atlassian-cloud-backuper` also available as container image on [GitHub Container Registry](https://kaos.sh/p/atlassian-cloud-backuper) and [Docker Hub](https://kaos.sh/d/atlassian-cloud-backuper).
+
 ### Usage
 
 #### Standalone

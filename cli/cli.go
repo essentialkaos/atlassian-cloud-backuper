@@ -699,7 +699,7 @@ func genUsage() *usage.Info {
 	info.AddOption(OPT_HELP, "Show this help message")
 	info.AddOption(OPT_VER, "Show version")
 
-	if !container.IsContainer() {
+	if container.IsContainer() {
 		addUnitedOption(info, ACCESS_ACCOUNT, "Account name", "name")
 		addUnitedOption(info, ACCESS_EMAIL, "User email with access to API", "email")
 		addUnitedOption(info, ACCESS_API_KEY, "API key", "key")
