@@ -163,7 +163,7 @@ func (u *SFTPUploader) connectToSFTP() (*sftp.Client, error) {
 		return nil, fmt.Errorf("Can't connect to SSH: %v", err)
 	}
 
-	return sftp.NewClient(sshClient)
+	return sftp.NewClient(sshClient, sftp.UseConcurrentWrites(true))
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
