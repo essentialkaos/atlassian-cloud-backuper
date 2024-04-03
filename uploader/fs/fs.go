@@ -8,7 +8,9 @@ package fs
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/essentialkaos/ek/v12/events"
@@ -35,6 +37,11 @@ type FSUploader struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// validate backuper interface
+var _ uploader.Uploader = (*FSUploader)(nil)
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 // NewUploader creates new FS uploader instance
 func NewUploader(config *Config) (*FSUploader, error) {
 	err := config.Validate()
@@ -56,7 +63,7 @@ func (u *FSUploader) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Upload uploads given file to storage
-func (u *FSUploader) Upload(file string) error {
+func (u *FSUploader) Upload(file, fileName string) error {
 	log.Info("Copying backup file to %s…", u.config.Path)
 
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "FS")
@@ -75,8 +82,6 @@ func (u *FSUploader) Upload(file string) error {
 		}
 	}
 
-	fileName := path.Base(file)
-
 	err = fsutil.CopyFile(file, path.Join(u.config.Path, fileName), u.config.Mode)
 
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "FS")
@@ -84,6 +89,34 @@ func (u *FSUploader) Upload(file string) error {
 	log.Info("Backup successfully copied to %s", u.config.Path)
 
 	return err
+}
+
+// Write writes data from given reader to given file
+func (u *FSUploader) Write(r io.ReadCloser, fileName string) error {
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "FS")
+
+	fd, err := os.OpenFile(
+		path.Join(u.config.Path, fileName),
+		os.O_CREATE|os.O_TRUNC|os.O_WRONLY, u.config.Mode,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	defer fd.Close()
+	defer r.Close()
+
+	w := bufio.NewWriter(fd)
+	_, err = io.Copy(w, r)
+
+	if err != nil {
+		return fmt.Errorf("File writing error: %w", err)
+	}
+
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "FS")
+
+	return nil
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //

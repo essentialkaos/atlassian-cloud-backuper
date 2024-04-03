@@ -10,8 +10,8 @@ package s3
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -19,6 +19,7 @@ import (
 	"github.com/essentialkaos/ek/v12/fsutil"
 	"github.com/essentialkaos/ek/v12/log"
 	"github.com/essentialkaos/ek/v12/passthru"
+	"github.com/essentialkaos/ek/v12/path"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -47,6 +48,11 @@ type S3Uploader struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// validate backuper interface
+var _ uploader.Uploader = (*S3Uploader)(nil)
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 // NewUploader creates new S3 uploader instance
 func NewUploader(config *Config) (*S3Uploader, error) {
 	err := config.Validate()
@@ -68,11 +74,10 @@ func (u *S3Uploader) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Upload uploads given file to S3 storage
-func (u *S3Uploader) Upload(file string) error {
+func (u *S3Uploader) Upload(file, fileName string) error {
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
 
 	lastUpdate := time.Now()
-	fileName := path.Base(file)
 	fileSize := fsutil.GetSize(file)
 	outputFile := path.Join(u.config.Path, fileName)
 
@@ -113,6 +118,41 @@ func (u *S3Uploader) Upload(file string) error {
 	}
 
 	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: aws.String(u.config.Bucket),
+		Key:    aws.String(outputFile),
+		Body:   r,
+	})
+
+	if err != nil {
+		return fmt.Errorf("Can't upload file to S3: %v", err)
+	}
+
+	log.Info("File successfully uploaded to S3!")
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "S3")
+
+	return nil
+}
+
+// Write writes data from given reader to given file
+func (u *S3Uploader) Write(r io.ReadCloser, fileName string) error {
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
+
+	outputFile := path.Join(u.config.Path, fileName)
+
+	log.Info(
+		"Uploading backup file to %s:%s (%s/%s)",
+		u.config.Bucket, u.config.Path, u.config.Host, u.config.Region,
+	)
+
+	client := s3.New(s3.Options{
+		Region:       "ru-central1",
+		BaseEndpoint: aws.String("https://storage.yandexcloud.net"),
+		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
+			u.config.AccessKeyID, u.config.SecretKey, "",
+		)),
+	})
+
+	_, err := client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.Bucket),
 		Key:    aws.String(outputFile),
 		Body:   r,

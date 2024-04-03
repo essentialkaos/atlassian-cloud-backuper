@@ -1,4 +1,4 @@
-package app
+package cli
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
@@ -58,7 +58,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.0.1"
+	VER  = "0.0.2"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -269,35 +269,19 @@ func loadConfig() error {
 	if !container.IsContainer() {
 		knfu.Combine(config)
 	} else {
-		knfu.Combine(
+		knfu.CombineSimple(
 			config,
-			knfu.Simple(ACCESS_ACCOUNT),
-			knfu.Simple(ACCESS_EMAIL),
-			knfu.Simple(ACCESS_API_KEY),
-			knfu.Simple(STORAGE_TYPE),
-			knfu.Simple(STORAGE_FS_PATH),
-			knfu.Simple(STORAGE_FS_MODE),
-			knfu.Simple(STORAGE_SFTP_HOST),
-			knfu.Simple(STORAGE_SFTP_USER),
-			knfu.Simple(STORAGE_SFTP_KEY),
-			knfu.Simple(STORAGE_SFTP_PATH),
-			knfu.Simple(STORAGE_SFTP_MODE),
-			knfu.Simple(STORAGE_S3_HOST),
-			knfu.Simple(STORAGE_S3_ACCESS_KEY),
-			knfu.Simple(STORAGE_S3_SECRET_KEY),
-			knfu.Simple(STORAGE_S3_BUCKET),
-			knfu.Simple(STORAGE_S3_PATH),
-			knfu.Simple(JIRA_OUTPUT_FILE),
-			knfu.Simple(JIRA_INCLUDE_ATTACHMENTS),
-			knfu.Simple(JIRA_CLOUD_FORMAT),
-			knfu.Simple(CONFLUENCE_OUTPUT_FILE),
-			knfu.Simple(CONFLUENCE_INCLUDE_ATTACHMENTS),
-			knfu.Simple(CONFLUENCE_CLOUD_FORMAT),
-			knfu.Simple(TEMP_DIR),
-			knfu.Simple(LOG_DIR),
-			knfu.Simple(LOG_FILE),
-			knfu.Simple(LOG_MODE),
-			knfu.Simple(LOG_LEVEL),
+			ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
+			STORAGE_TYPE,
+			STORAGE_FS_PATH, STORAGE_FS_MODE,
+			STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
+			STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
+			STORAGE_S3_HOST, STORAGE_S3_REGION, STORAGE_S3_ACCESS_KEY,
+			STORAGE_S3_SECRET_KEY, STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+			JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
+			CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
+			TEMP_DIR,
+			LOG_DIR, LOG_FILE, LOG_MODE, LOG_LEVEL,
 		)
 	}
 
@@ -410,7 +394,7 @@ func process(target string) bool {
 
 	defer temp.Clean()
 
-	bkpr, outputFile, err := getBackuper(target)
+	bkpr, err := getBackuper(target)
 
 	if err != nil {
 		log.Crit("Can't start backuping process: %v", err)
@@ -419,7 +403,10 @@ func process(target string) bool {
 
 	bkpr.SetDispatcher(dispatcher)
 
-	err = bkpr.Backup()
+	outputFileName := getOutputFileName(target)
+	tmpFile := path.Join(temp.MkName(".zip"), outputFileName)
+
+	err = bkpr.Backup(tmpFile)
 
 	if err != nil {
 		spinner.Done(false)
@@ -438,7 +425,7 @@ func process(target string) bool {
 
 	updr.SetDispatcher(dispatcher)
 
-	err = updr.Upload(outputFile)
+	err = updr.Upload(tmpFile, outputFileName)
 
 	if err != nil {
 		spinner.Done(false)
@@ -450,14 +437,14 @@ func process(target string) bool {
 }
 
 // getBackuper returns backuper instances
-func getBackuper(target string) (backuper.Backuper, string, error) {
+func getBackuper(target string) (backuper.Backuper, error) {
 	var err error
 	var bkpr backuper.Backuper
 
 	bkpConfig, err := getBackuperConfig(target)
 
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	switch target {
@@ -467,40 +454,40 @@ func getBackuper(target string) (backuper.Backuper, string, error) {
 		bkpr, err = confluence.NewBackuper(bkpConfig)
 	}
 
-	return bkpr, bkpConfig.OutputFile, nil
+	return bkpr, nil
+}
+
+// getOutputFileName returns name for backup output file
+func getOutputFileName(target string) string {
+	var template string
+
+	switch target {
+	case TARGET_JIRA:
+		template = knfu.GetS(JIRA_OUTPUT_FILE, `jira-backup-%Y-%m-%d`) + ".zip"
+	case TARGET_CONFLUENCE:
+		template = knfu.GetS(JIRA_OUTPUT_FILE, `confluence-backup-%Y-%m-%d`) + ".zip"
+	}
+
+	return timeutil.Format(time.Now(), template)
 }
 
 // getBackuperConfig returns configuration for backuper
 func getBackuperConfig(target string) (*backuper.Config, error) {
-	tmpDir, err := temp.MkDir()
-
-	if err != nil {
-		return nil, fmt.Errorf("Can't create directory for temporary data: %v", err.Error())
-	}
-
 	switch target {
 	case TARGET_JIRA:
-		fileNameTemplate := knfu.GetS(JIRA_OUTPUT_FILE, `jira-backup-%Y-%m-%d`) + ".zip"
-		tmpFile := path.Join(path.Clean(tmpDir), timeutil.Format(time.Now(), fileNameTemplate))
-
 		return &backuper.Config{
 			Account:         knfu.GetS(ACCESS_ACCOUNT),
 			Email:           knfu.GetS(ACCESS_EMAIL),
 			APIKey:          knfu.GetS(ACCESS_API_KEY),
-			OutputFile:      tmpFile,
 			WithAttachments: knfu.GetB(JIRA_INCLUDE_ATTACHMENTS),
 			ForCloud:        knfu.GetB(JIRA_CLOUD_FORMAT),
 		}, nil
 
 	case TARGET_CONFLUENCE:
-		fileNameTemplate := knfu.GetS(JIRA_OUTPUT_FILE, `confluence-backup-%Y-%m-%d`) + ".zip"
-		tmpFile := path.Join(path.Clean(tmpDir), timeutil.Format(time.Now(), fileNameTemplate))
-
 		return &backuper.Config{
 			Account:         knfu.GetS(ACCESS_ACCOUNT),
 			Email:           knfu.GetS(ACCESS_EMAIL),
 			APIKey:          knfu.GetS(ACCESS_API_KEY),
-			OutputFile:      tmpFile,
 			WithAttachments: knfu.GetB(CONFLUENCE_INCLUDE_ATTACHMENTS),
 			ForCloud:        knfu.GetB(CONFLUENCE_CLOUD_FORMAT),
 		}, nil
@@ -712,6 +699,7 @@ func genUsage() *usage.Info {
 		addUnitedOption(info, STORAGE_SFTP_PATH, "Path on SFTP", "path")
 		addUnitedOption(info, STORAGE_SFTP_MODE, "File mode on SFTP", "mode")
 		addUnitedOption(info, STORAGE_S3_HOST, "S3 host", "host")
+		addUnitedOption(info, STORAGE_S3_REGION, "S3 region", "region")
 		addUnitedOption(info, STORAGE_S3_ACCESS_KEY, "S3 access key ID", "id")
 		addUnitedOption(info, STORAGE_S3_SECRET_KEY, "S3 access secret key", "key")
 		addUnitedOption(info, STORAGE_S3_BUCKET, "S3 bucket", "name")

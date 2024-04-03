@@ -45,6 +45,11 @@ type SFTPUploader struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// validate backuper interface
+var _ uploader.Uploader = (*SFTPUploader)(nil)
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 // NewUploader creates new SFTP uploader instance
 func NewUploader(config *Config) (*SFTPUploader, error) {
 	err := config.Validate()
@@ -66,11 +71,10 @@ func (u *SFTPUploader) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Upload uploads given file to SFTP storage
-func (u *SFTPUploader) Upload(file string) error {
+func (u *SFTPUploader) Upload(file, fileName string) error {
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "SFTP")
 
 	lastUpdate := time.Now()
-	fileName := path.Base(file)
 	fileSize := fsutil.GetSize(file)
 	outputFile := path.Join(u.config.Path, fileName)
 
@@ -129,6 +133,62 @@ func (u *SFTPUploader) Upload(file string) error {
 	}
 
 	_, err = io.Copy(w, inputFD)
+
+	if err != nil {
+		return fmt.Errorf("Can't upload file to SFTP: %v", err)
+	}
+
+	err = sftpClient.Chmod(outputFile, u.config.Mode)
+
+	if err != nil {
+		log.Error("Can't change file mode for uploaded file: %v", err)
+	}
+
+	log.Info("File successfully uploaded to SFTP!")
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "SFTP")
+
+	return nil
+}
+
+// Write writes data from given reader to given file
+func (u *SFTPUploader) Write(r io.ReadCloser, fileName string) error {
+	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "SFTP")
+
+	outputFile := path.Join(u.config.Path, fileName)
+
+	log.Info(
+		"Uploading backup file to %s@%s~%s/%s…",
+		u.config.User, u.config.Host, u.config.Path, fileName,
+	)
+
+	sftpClient, err := u.connectToSFTP()
+
+	if err != nil {
+		return fmt.Errorf("Can't connect to SFTP: %v", err)
+	}
+
+	defer sftpClient.Close()
+
+	_, err = sftpClient.Stat(u.config.Path)
+
+	if err != nil {
+		err = sftpClient.MkdirAll(u.config.Path)
+
+		if err != nil {
+			return fmt.Errorf("Can't create directory for backup: %v", err)
+		}
+	}
+
+	outputFD, err := sftpClient.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
+
+	if err != nil {
+		return fmt.Errorf("Can't create file of SFTP: %v", err)
+	}
+
+	defer outputFD.Close()
+	defer r.Close()
+
+	_, err = io.Copy(outputFD, r)
 
 	if err != nil {
 		return fmt.Errorf("Can't upload file to SFTP: %v", err)
