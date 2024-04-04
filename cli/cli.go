@@ -121,7 +121,7 @@ var optMap = options.Map{
 	OPT_CONFIG:      {Value: "/etc/atlassian-cloud-backuper.knf"},
 	OPT_INTERACTIVE: {Type: options.BOOL},
 	OPT_NO_COLOR:    {Type: options.BOOL},
-	OPT_HELP:        {Type: options.BOOL},
+	OPT_HELP:        {Type: options.MIXED},
 	OPT_VER:         {Type: options.MIXED},
 
 	OPT_VERB_VER:     {Type: options.BOOL},
@@ -171,7 +171,7 @@ func Run(gitRev string, gomod []byte) {
 			Print()
 		os.Exit(0)
 	case options.GetB(OPT_HELP) || len(args) == 0:
-		genUsage().Print()
+		genUsage(options.GetS(OPT_HELP)).Print()
 		os.Exit(0)
 	}
 
@@ -650,7 +650,7 @@ func getServiceStatus(service string) support.Check {
 
 // printCompletion prints completion for given shell
 func printCompletion() int {
-	info := genUsage()
+	info := genUsage("")
 
 	switch options.GetS(OPT_COMPLETION) {
 	case "bash":
@@ -668,7 +668,7 @@ func printCompletion() int {
 
 // printMan prints man page
 func printMan() {
-	fmt.Println(man.Generate(genUsage(), genAbout("")))
+	fmt.Println(man.Generate(genUsage(""), genAbout("")))
 }
 
 // addUnitedOption adds info about option from united config
@@ -677,7 +677,7 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 }
 
 // genUsage generates usage info
-func genUsage() *usage.Info {
+func genUsage(section string) *usage.Info {
 	info := usage.NewInfo("", "target")
 
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
@@ -686,7 +686,7 @@ func genUsage() *usage.Info {
 	info.AddOption(OPT_HELP, "Show this help message")
 	info.AddOption(OPT_VER, "Show version")
 
-	if container.IsContainer() {
+	if container.IsContainer() || section == "container" {
 		addUnitedOption(info, ACCESS_ACCOUNT, "Account name", "name")
 		addUnitedOption(info, ACCESS_EMAIL, "User email with access to API", "email")
 		addUnitedOption(info, ACCESS_API_KEY, "API key", "key")

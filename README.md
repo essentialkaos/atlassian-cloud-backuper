@@ -62,7 +62,6 @@ Options
   --no-color, -nc                            Disable colors in output
   --help, -h                                 Show this help message
   --version, -v                              Show version
-
   --access-account name                      Account name (ACCESS_ACCOUNT)
   --access-email email                       User email with access to API (ACCESS_EMAIL)
   --access-api-key key                       API key (ACCESS_API_KEY)
@@ -75,6 +74,7 @@ Options
   --storage-sftp-path path                   Path on SFTP (STORAGE_SFTP_PATH)
   --storage-sftp-mode mode                   File mode on SFTP (STORAGE_SFTP_MODE)
   --storage-s3-host host                     S3 host (STORAGE_S3_HOST)
+  --storage-s3-region region                 S3 region (STORAGE_S3_REGION)
   --storage-s3-access-key id                 S3 access key ID (STORAGE_S3_ACCESS_KEY)
   --storage-s3-secret-key key                S3 access secret key (STORAGE_S3_SECRET_KEY)
   --storage-s3-bucket name                   S3 bucket (STORAGE_S3_BUCKET)
@@ -88,6 +88,12 @@ Options
   --temp-dir path                            Path to directory for temporary data (TEMP_DIR)
   --log-format text/json                     Log format (LOG_FORMAT)
   --log-level level                          Log level (LOG_LEVEL)
+```
+
+You can force output of this information by passing `container` to `--help` option:
+
+```bash
+atlassian-cloud-backuper --help container
 ```
 
 ### CI Status
