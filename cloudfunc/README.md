@@ -1,5 +1,61 @@
 ### Cloud function
 
+#### Targets
+
+- `jira` — Create backup of Jira instance;
+- `confluence` — Create backup of Confluence instance.
+
+#### Stages
+
+- `create` — generate backup file for given target;
+- `download` — download backup file for given target.
+
+#### Handlers
+
+- `cloudfunc/ycfunc.Request` — handler for HTTP requests
+- `cloudfunc/ycfunc.Trigger` — handler for events from timer trigger
+
+###### `Request` configuration
+
+You must pass `target` and `stage` using query string.
+
+Example:
+
+```bash
+# Create Jira backup (asynchronously)
+curl 'https://functions.yandexcloud.net/abcdeabcdeabcdeabcde?target=jira&stage=create'
+
+# Download Jira backup
+curl 'https://functions.yandexcloud.net/abcdeabcdeabcdeabcde?target=jira&stage=download'
+
+# Create Confluence backup (asynchronously)
+curl 'https://functions.yandexcloud.net/abcdeabcdeabcdeabcde?target=confluence&stage=create'
+
+# Download Confluence backup
+curl 'https://functions.yandexcloud.net/abcdeabcdeabcdeabcde?target=confluence&stage=download'
+```
+
+HTTP status codes:
+
+- `200` — request successfully processed;
+- `400` — query validation error;
+- `500` — configuration validation error.
+
+###### `Trigger` configuration
+
+You must pass `target` and `stage` using event payload using ';' as a separator.
+
+Supported payload values:
+
+```
+jira;create
+jira;download
+confluence;create
+confluence;download
+```
+
+#### Environment variables
+
 | Env | Type | Required | Description |
 |-----|------|----------|-------------|
 | `ACCESS_ACCOUNT`                 | sᴛʀɪɴɢ  | Yes | _Account name_ |
