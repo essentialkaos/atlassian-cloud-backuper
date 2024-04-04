@@ -1,27 +1,30 @@
-### Cloud function
+## Cloud function
 
-#### Targets
+> [!IMPORTANT]
+> Currently we support only [Yandex.Cloud serverless/cloud functions](https://yandex.cloud/en/docs/functions/lang/golang/). AWS Lambda is not supported yet.
+
+### Targets
 
 - `jira` — Create backup of Jira instance;
 - `confluence` — Create backup of Confluence instance.
 
-#### Stages
+### Stages
 
 - `create` — generate backup file for given target;
 - `download` — download backup file for given target.
 
-#### Recommended roles for service account (Yandex.Cloud)
+### Recommended roles for service account (Yandex.Cloud)
 
 - `storage.uploader` — for uploading data to S3;
 - `lockbox.payloadViewer` — for viewing secrets in Lockbox;
 - `functions.functionInvoker` — for working with triggers.
 
-#### Handlers
+### Handlers
 
-- `cloudfunc/ycfunc.Request` — handler for HTTP requests
-- `cloudfunc/ycfunc.Trigger` — handler for events from timer trigger
+- `cloudfunc/ycfunc.Request` — handler for HTTP requests;
+- `cloudfunc/ycfunc.Trigger` — handler for events from timer trigger.
 
-###### `Request` configuration
+#### `Request` configuration
 
 You must pass `target` and `stage` using query string.
 
@@ -47,7 +50,7 @@ HTTP status codes:
 - `400` — query validation error;
 - `500` — configuration validation error.
 
-###### `Trigger` configuration
+#### `Trigger` configuration
 
 You must pass `target` and `stage` using event payload using ';' as a separator.
 
@@ -60,7 +63,7 @@ confluence;create
 confluence;download
 ```
 
-#### Environment variables
+### Environment variables
 
 | Env | Type | Required | Description |
 |-----|------|----------|-------------|
