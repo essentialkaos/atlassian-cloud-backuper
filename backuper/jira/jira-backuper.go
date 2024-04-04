@@ -50,6 +50,11 @@ type BackupProgressInfo struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// validate backuper interface
+var _ backuper.Backuper = (*JiraBackuper)(nil)
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 func NewBackuper(config *backuper.Config) (*JiraBackuper, error) {
 	err := config.Validate()
 
@@ -70,14 +75,30 @@ func (b *JiraBackuper) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Backup starts backup process
-func (b *JiraBackuper) Backup() error {
+func (b *JiraBackuper) Backup(outputFile string) error {
+	backupTaskID, err := b.Start()
+
+	if err != nil {
+		return err
+	}
+
+	backupFileURL, err := b.Progress(backupTaskID)
+
+	if err != nil {
+		return err
+	}
+
+	return b.Download(backupFileURL, outputFile)
+}
+
+// Start creates task for backuping data
+func (b *JiraBackuper) Start() (string, error) {
 	var err error
-	var backupTaskID, backupFile string
+	var backupTaskID string
 
 	log.Info("Starting Jira backup process for account %s…", b.config.Account)
 	log.Info("Checking for existing backup task…")
 
-	start := time.Now()
 	backupTaskID, _ = b.getLastTaskID()
 
 	if backupTaskID != "" {
@@ -88,31 +109,39 @@ func (b *JiraBackuper) Backup() error {
 		backupTaskID, err = b.startBackup()
 
 		if err != nil {
-			return fmt.Errorf("Can't start backup: %w", err)
+			return "", fmt.Errorf("Can't start backup: %w", err)
 		}
 	}
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_STARTED, nil)
 
+	return backupTaskID, nil
+}
+
+// Progress monitors backup creation progress
+func (b *JiraBackuper) Progress(taskID string) (string, error) {
+	var backupFileURL string
+
 	errNum := 0
 	lastProgress := -1
+	start := time.Now()
 
 	for range time.NewTicker(15 * time.Second).C {
-		progressInfo, err := b.getTaskProgress(backupTaskID)
+		progressInfo, err := b.getTaskProgress(taskID)
 
 		if err != nil {
 			log.Error("Got error while checking progress: %w", err)
 			errNum++
 
 			if errNum > 10 {
-				return fmt.Errorf("Can't download backup: too much errors")
+				return "", fmt.Errorf("Can't download backup: too much errors")
 			}
 		} else {
 			errNum = 0
 		}
 
 		if time.Since(start) > 6*time.Hour {
-			return fmt.Errorf("Can't download backup: backup task took too much time")
+			return "", fmt.Errorf("Can't download backup: backup task took too much time")
 		}
 
 		b.dispatcher.Dispatch(
@@ -126,17 +155,56 @@ func (b *JiraBackuper) Backup() error {
 		}
 
 		if progressInfo.Progress >= 100 && progressInfo.Result != "" {
-			backupFile = progressInfo.Result
+			backupFileURL = progressInfo.Result
 			break
 		}
 	}
 
+	return backupFileURL, nil
+}
+
+// IsBackupCreated returns true if backup created and ready for download
+func (b *JiraBackuper) IsBackupCreated() (bool, error) {
+	backupTaskID, _ := b.getLastTaskID()
+
+	if backupTaskID == "" {
+		return false, nil
+	}
+
+	progressInfo, err := b.getTaskProgress(backupTaskID)
+
+	if err != nil {
+		return false, err
+	}
+
+	return progressInfo.Progress >= 100 && progressInfo.Result != "", nil
+}
+
+// GetBackupFile returns name of created backup file
+func (b *JiraBackuper) GetBackupFile() (string, error) {
+	backupTaskID, _ := b.getLastTaskID()
+
+	if backupTaskID == "" {
+		return "", fmt.Errorf("Can't find backup task ID")
+	}
+
+	progressInfo, err := b.getTaskProgress(backupTaskID)
+
+	if err != nil {
+		return "", err
+	}
+
+	return progressInfo.Result, nil
+}
+
+// Download downloads backup file
+func (b *JiraBackuper) Download(backupFile, outputFile string) error {
 	log.Info("Backup is ready for download, fetching file…")
-	log.Info("Writing backup file into %s", b.config.OutputFile)
+	log.Info("Writing backup file into %s", outputFile)
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_SAVING, nil)
 
-	err = b.downloadBackup(backupFile)
+	err := b.downloadBackup(backupFile, outputFile)
 
 	if err != nil {
 		return err
@@ -146,10 +214,34 @@ func (b *JiraBackuper) Backup() error {
 
 	log.Info(
 		"Backup successfully saved (size: %s)",
-		fmtutil.PrettySize(fsutil.GetSize(b.config.OutputFile)),
+		fmtutil.PrettySize(fsutil.GetSize(outputFile)),
 	)
 
 	return nil
+}
+
+// GetReader returns reader for given backup file
+func (b *JiraBackuper) GetReader(backupFile string) (io.ReadCloser, error) {
+	backupFileURL := b.config.AccountURL() + "/plugins/servlet/" + backupFile
+
+	log.Debug("Downloading file from %s", backupFileURL)
+
+	resp, err := req.Request{
+		URL:               backupFileURL,
+		BasicAuthUsername: b.config.Email,
+		BasicAuthPassword: b.config.APIKey,
+		AutoDiscard:       true,
+	}.Get()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("API returned non-ok status code (%d)", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -239,27 +331,16 @@ func (b *JiraBackuper) getTaskProgress(taskID string) (*BackupProgressInfo, erro
 }
 
 // downloadBackup downloads backup and saves it as a file
-func (b *JiraBackuper) downloadBackup(backupFile string) error {
-	backupFileURL := b.config.AccountURL() + "/plugins/servlet/" + backupFile
-
-	log.Debug("Downloading file from %s", backupFileURL)
-
-	resp, err := req.Request{
-		URL:               backupFileURL,
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		AutoDiscard:       true,
-	}.Get()
+func (b *JiraBackuper) downloadBackup(backupFile, outputFile string) error {
+	r, err := b.GetReader(backupFile)
 
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("API returned non-ok status code (%d)", resp.StatusCode)
-	}
+	defer r.Close()
 
-	fd, err := os.OpenFile(b.config.OutputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	fd, err := os.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 
 	if err != nil {
 		return fmt.Errorf("Can't open file for saving data: %w", err)
@@ -268,7 +349,7 @@ func (b *JiraBackuper) downloadBackup(backupFile string) error {
 	defer fd.Close()
 
 	w := bufio.NewWriter(fd)
-	_, err = io.Copy(w, resp.Body)
+	_, err = io.Copy(w, r)
 
 	if err != nil {
 		return fmt.Errorf("File writing error: %w", err)

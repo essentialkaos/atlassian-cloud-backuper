@@ -26,6 +26,10 @@ GITREV ?= $(shell test -s $(MAKEDIR)/.git && git rev-parse --short HEAD)
 
 all: atlassian-cloud-backuper ## Build all binaries
 
+pack: clean ## Pack source to zip file
+	go build cloudfunc/ycfunc.go && rm -f ycfunc
+	zip atlassian-cloud-backuper -r * -x ".git/*" "vendor/*" "common/*" "atlassian-cloud-backuper.go" "*.md"
+
 atlassian-cloud-backuper:
 	go build $(VERBOSE_FLAG) -ldflags="-X main.gitrev=$(GITREV)" atlassian-cloud-backuper.go
 
@@ -85,11 +89,12 @@ vet: ## Runs 'go vet' over sources
 
 clean: ## Remove generated files
 	rm -f atlassian-cloud-backuper
+	rm -f atlassian-cloud-backuper.zip
 
 help: ## Show this info
 	@echo -e '\n\033[1mTargets:\033[0m\n'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-26s\033[0m %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
 	@echo -e '\n\033[1mVariables:\033[0m\n'
 	@grep -E '^ifdef [A-Z_]+ .*?## .*$$' $(abspath $(lastword $(MAKEFILE_LIST))) \
 		| sed 's/ifdef //' \

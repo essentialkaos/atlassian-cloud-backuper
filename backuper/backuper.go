@@ -9,6 +9,7 @@ package backuper
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/essentialkaos/ek/v12/events"
 )
@@ -26,11 +27,29 @@ const (
 
 // Backuper is generic backuper interface
 type Backuper interface {
-	// Backup starts backup process
-	Backup() error
+	// Backup runs backup process
+	Backup(outputFile string) error
 
 	// SetDispatcher sets events dispatcher
 	SetDispatcher(d *events.Dispatcher)
+
+	// Start creates task for backuping data
+	Start() (string, error)
+
+	// Progress monitors backup creation progress
+	Progress(taskID string) (string, error)
+
+	// Download downloads backup file
+	Download(backupFile, outputFile string) error
+
+	// GetReader returns reader for given backup file
+	GetReader(backupFile string) (io.ReadCloser, error)
+
+	// GetBackupFile returns name of created backup file
+	GetBackupFile() (string, error)
+
+	// IsBackupCreated returns true if backup created and ready for download
+	IsBackupCreated() (bool, error)
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -40,7 +59,6 @@ type Config struct {
 	Account         string
 	Email           string
 	APIKey          string
-	OutputFile      string
 	WithAttachments bool
 	ForCloud        bool
 }
@@ -70,8 +88,6 @@ func (c Config) Validate() error {
 		return ErrEmptyEmail
 	case c.APIKey == "":
 		return ErrEmptyAPIKey
-	case c.OutputFile == "":
-		return ErrEmptyOutputFile
 	}
 
 	return nil

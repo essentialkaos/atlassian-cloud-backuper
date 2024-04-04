@@ -49,6 +49,11 @@ type BackupProgressInfo struct {
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 
+// validate backuper interface
+var _ backuper.Backuper = (*ConfluenceBackuper)(nil)
+
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 func NewBackuper(config *backuper.Config) (*ConfluenceBackuper, error) {
 	err := config.Validate()
 
@@ -69,30 +74,51 @@ func (b *ConfluenceBackuper) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Backup starts backup process
-func (b *ConfluenceBackuper) Backup() error {
-	var err error
-	var backupFile string
+func (b *ConfluenceBackuper) Backup(outputFile string) error {
+	_, err := b.Start()
 
+	if err != nil {
+		return err
+	}
+
+	backupFileURL, err := b.Progress("")
+
+	if err != nil {
+		return err
+	}
+
+	return b.Download(backupFileURL, outputFile)
+}
+
+// Start creates task for backuping data
+func (b *ConfluenceBackuper) Start() (string, error) {
 	log.Info("Starting Confluence backup process for account %s…", b.config.Account)
 	log.Info("Checking for existing backup task…")
 
-	start := time.Now()
 	info, _ := b.getBackupProgress()
 
 	if info != nil && !info.IsOutdated {
 		log.Info("Found previously created backup task")
 	} else {
-		err = b.startBackup()
+		err := b.startBackup()
 
 		if err != nil {
-			return fmt.Errorf("Can't start backup: %w", err)
+			return "", fmt.Errorf("Can't start backup: %w", err)
 		}
 	}
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_STARTED, nil)
 
+	return "", nil
+}
+
+// Progress monitors backup creation progress
+func (b *ConfluenceBackuper) Progress(taskID string) (string, error) {
+	var backupFileURL string
+
 	errNum := 0
 	lastProgress := ""
+	start := time.Now()
 
 	for range time.NewTicker(15 * time.Second).C {
 		progressInfo, err := b.getBackupProgress()
@@ -102,14 +128,14 @@ func (b *ConfluenceBackuper) Backup() error {
 			errNum++
 
 			if errNum > 10 {
-				return fmt.Errorf("Can't download backup: too much errors")
+				return "", fmt.Errorf("Can't download backup: too much errors")
 			}
 		} else {
 			errNum = 0
 		}
 
 		if time.Since(start) > 6*time.Hour {
-			return fmt.Errorf("Can't download backup: backup task took too much time")
+			return "", fmt.Errorf("Can't download backup: backup task took too much time")
 		}
 
 		b.dispatcher.Dispatch(backuper.EVENT_BACKUP_PROGRESS, b.convertProgressInfo(progressInfo))
@@ -124,17 +150,44 @@ func (b *ConfluenceBackuper) Backup() error {
 		}
 
 		if progressInfo.Size != 0 && progressInfo.Filename != "" {
-			backupFile = progressInfo.Filename
+			backupFileURL = progressInfo.Filename
 			break
 		}
 	}
 
+	return backupFileURL, nil
+}
+
+// IsBackupCreated returns true if backup created and ready for download
+func (b *ConfluenceBackuper) IsBackupCreated() (bool, error) {
+	progressInfo, err := b.getBackupProgress()
+
+	if err != nil {
+		return false, err
+	}
+
+	return progressInfo.Size != 0 && progressInfo.Filename != "", nil
+}
+
+// GetBackupFile returns name of created backup file
+func (b *ConfluenceBackuper) GetBackupFile() (string, error) {
+	progressInfo, err := b.getBackupProgress()
+
+	if err != nil {
+		return "", err
+	}
+
+	return progressInfo.Filename, nil
+}
+
+// Download downloads backup file
+func (b *ConfluenceBackuper) Download(backupFile, outputFile string) error {
 	log.Info("Backup is ready for download, fetching file…")
-	log.Info("Writing backup file into %s", b.config.OutputFile)
+	log.Info("Writing backup file into %s", outputFile)
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_SAVING, nil)
 
-	err = b.downloadBackup(backupFile)
+	err := b.downloadBackup(backupFile, outputFile)
 
 	if err != nil {
 		return err
@@ -144,10 +197,34 @@ func (b *ConfluenceBackuper) Backup() error {
 
 	log.Info(
 		"Backup successfully saved (size: %s)",
-		fmtutil.PrettySize(fsutil.GetSize(b.config.OutputFile)),
+		fmtutil.PrettySize(fsutil.GetSize(outputFile)),
 	)
 
 	return nil
+}
+
+// GetReader returns reader for given backup file
+func (b *ConfluenceBackuper) GetReader(backupFile string) (io.ReadCloser, error) {
+	backupFileURL := b.config.AccountURL() + "/wiki/download/" + backupFile
+
+	log.Debug("Downloading file from %s", backupFileURL)
+
+	resp, err := req.Request{
+		URL:               backupFileURL,
+		BasicAuthUsername: b.config.Email,
+		BasicAuthPassword: b.config.APIKey,
+		AutoDiscard:       true,
+	}.Get()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("API returned non-ok status code (%d)", resp.StatusCode)
+	}
+
+	return resp.Body, nil
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -224,27 +301,16 @@ func (b *ConfluenceBackuper) convertProgressInfo(i *BackupProgressInfo) *backupe
 }
 
 // downloadBackup downloads backup and saves it as a file
-func (b *ConfluenceBackuper) downloadBackup(backupFile string) error {
-	backupFileURL := b.config.AccountURL() + "/wiki/download/" + backupFile
-
-	log.Debug("Downloading file from %s", backupFileURL)
-
-	resp, err := req.Request{
-		URL:               backupFileURL,
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		AutoDiscard:       true,
-	}.Get()
+func (b *ConfluenceBackuper) downloadBackup(backupFile, outputFile string) error {
+	r, err := b.GetReader(backupFile)
 
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("API returned non-ok status code (%d)", resp.StatusCode)
-	}
+	defer r.Close()
 
-	fd, err := os.OpenFile(b.config.OutputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
+	fd, err := os.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 
 	if err != nil {
 		return fmt.Errorf("Can't open file for saving data: %w", err)
@@ -253,7 +319,7 @@ func (b *ConfluenceBackuper) downloadBackup(backupFile string) error {
 	defer fd.Close()
 
 	w := bufio.NewWriter(fd)
-	_, err = io.Copy(w, resp.Body)
+	_, err = io.Copy(w, r)
 
 	if err != nil {
 		return fmt.Errorf("File writing error: %w", err)
