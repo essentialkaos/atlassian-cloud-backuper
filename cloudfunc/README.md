@@ -10,6 +10,12 @@
 - `create` — generate backup file for given target;
 - `download` — download backup file for given target.
 
+#### Recomended roles for service account (Yandex.Cloud)
+
+- `storage.uploader` — for uploading data to S3;
+- `lockbox.payloadViewer` — for viewing secrets in Lockbox;
+- `functions.functionInvoker` — for working with triggers.
+
 #### Handlers
 
 - `cloudfunc/ycfunc.Request` — handler for HTTP requests
