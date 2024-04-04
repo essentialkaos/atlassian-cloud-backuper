@@ -241,7 +241,7 @@ func validatePayload(data *Data) bool {
 		return false
 	}
 
-	switch target {
+	switch stage {
 	case STAGE_CREATE, STAGE_DOWNLOAD:
 		// ok
 
