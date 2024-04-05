@@ -331,18 +331,6 @@ func createBackupRequest(target string) bool {
 		return false
 	}
 
-	hasBackup, err := bkpr.IsBackupCreated()
-
-	if err != nil {
-		log.Error("Can't check backup status: %v", err)
-		return false
-	}
-
-	if hasBackup {
-		log.Info("Backup already created, nothing to do")
-		return true
-	}
-
 	taskID, err := bkpr.Start()
 
 	if err != nil {
