@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
-	github.com/essentialkaos/ek/v12 v12.116.0
+	github.com/essentialkaos/ek/v12 v12.121.0
 	github.com/pkg/sftp v1.13.6
 	golang.org/x/crypto v0.22.0
 )
@@ -21,7 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.5 // indirect
 	github.com/aws/smithy-go v1.20.2 // indirect
-	github.com/essentialkaos/depsy v1.1.0 // indirect
+	github.com/essentialkaos/depsy v1.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 )
