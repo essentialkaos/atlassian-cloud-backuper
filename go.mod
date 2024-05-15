@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.13
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.2
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.0
 	github.com/essentialkaos/ek/v12 v12.124.0
 	github.com/pkg/sftp v1.13.6
 	golang.org/x/crypto v0.23.0
