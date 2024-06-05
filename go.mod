@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.4
 	github.com/essentialkaos/ek/v12 v12.125.1
 	github.com/pkg/sftp v1.13.6
-	golang.org/x/crypto v0.23.0
+	golang.org/x/crypto v0.24.0
 )
 
 require (
@@ -23,5 +23,5 @@ require (
 	github.com/aws/smithy-go v1.20.2 // indirect
 	github.com/essentialkaos/depsy v1.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.21.0 // indirect
 )
