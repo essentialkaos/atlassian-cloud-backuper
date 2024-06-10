@@ -28,3 +28,9 @@ updates:
       - "andyone"
     reviewers:
       - "andyone"
+    groups:
+      all:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
