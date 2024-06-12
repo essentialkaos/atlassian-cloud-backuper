@@ -58,7 +58,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.1.0"
+	VER  = "0.0.3"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -205,11 +205,11 @@ func preConfigureUI() {
 
 	switch {
 	case fmtc.IsTrueColorSupported():
-		colorTagApp, colorTagVer = "{*}{#00AFFF}", "{#00AFFF}"
+		colorTagApp, colorTagVer = "{*}{#0065FF}", "{#0065FF}"
 	case fmtc.Is256ColorsSupported():
-		colorTagApp, colorTagVer = "{*}{#39}", "{#39}"
+		colorTagApp, colorTagVer = "{*}{#21}", "{#21}"
 	default:
-		colorTagApp, colorTagVer = "{*}{c}", "{c}"
+		colorTagApp, colorTagVer = "{*}{b}", "{b}"
 	}
 }
 
@@ -665,6 +665,9 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 // genUsage generates usage info
 func genUsage(section string) *usage.Info {
 	info := usage.NewInfo("", "target")
+
+	info.WrapLen = 100
+	info.AppNameColorTag = colorTagApp
 
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
 	info.AddOption(OPT_INTERACTIVE, "Interactive mode")

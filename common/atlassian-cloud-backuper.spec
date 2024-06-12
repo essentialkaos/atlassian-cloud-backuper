@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.0.2
+Version:        0.0.3
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -110,6 +110,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Wed Jun 12 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.3-0
+- Dependencies update
+
 * Thu Apr 04 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.2-0
 - Added cloud/serverless function for Yandex.Cloud
 - Fixed bug with handling STORAGE_S3_REGION value from options and environment
