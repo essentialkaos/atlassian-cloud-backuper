@@ -25,7 +25,7 @@ import (
 
 	knfu "github.com/essentialkaos/ek/v12/knf/united"
 
-	"github.com/essentialkaos/atlassian-cloud-backuper/cli"
+	"github.com/essentialkaos/atlassian-cloud-backuper/app"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
@@ -75,8 +75,8 @@ func main() {
 
 // Request is handler for HTTP requests
 func Request(rw http.ResponseWriter, r *http.Request) {
-	req.SetUserAgent("AtlassianCloudBackuper|YCFunction", cli.VER)
-	rw.Header().Set("X-Version", cli.VER)
+	req.SetUserAgent("AtlassianCloudBackuper|YCFunction", app.VER)
+	rw.Header().Set("X-Version", app.VER)
 
 	log.Global.UseJSON = true
 	log.Global.WithCaller = true
@@ -166,7 +166,7 @@ func validateRequest(r *http.Request) bool {
 	stage := strings.ToLower(r.URL.Query().Get("stage"))
 
 	switch target {
-	case cli.TARGET_JIRA, cli.TARGET_CONFLUENCE:
+	case app.TARGET_JIRA, app.TARGET_CONFLUENCE:
 		// ok
 
 	case "":
@@ -229,7 +229,7 @@ func validatePayload(data *Data) bool {
 	target, stage, _ := data.GetPayload()
 
 	switch target {
-	case cli.TARGET_JIRA, cli.TARGET_CONFLUENCE:
+	case app.TARGET_JIRA, app.TARGET_CONFLUENCE:
 		// ok
 
 	case "":
@@ -260,60 +260,60 @@ func validatePayload(data *Data) bool {
 // validateConfiguration validates configuration
 func validateConfiguration() bool {
 	switch {
-	case getEnvVar(cli.ACCESS_ACCOUNT) == "":
+	case getEnvVar(app.ACCESS_ACCOUNT) == "":
 		log.Error("Invalid configuration: ACCESS_ACCOUNT is empty")
 		return false
 
-	case getEnvVar(cli.ACCESS_EMAIL) == "":
+	case getEnvVar(app.ACCESS_EMAIL) == "":
 		log.Error("Invalid configuration: ACCESS_EMAIL is empty")
 		return false
 
-	case getEnvVar(cli.ACCESS_API_KEY) == "":
+	case getEnvVar(app.ACCESS_API_KEY) == "":
 		log.Error("Invalid configuration: ACCESS_API_KEY is empty")
 		return false
 
-	case getEnvVar(cli.STORAGE_TYPE) == "":
+	case getEnvVar(app.STORAGE_TYPE) == "":
 		log.Error("Invalid configuration: STORAGE_TYPE is empty")
 		return false
 	}
 
-	switch getEnvVar(cli.STORAGE_TYPE) {
+	switch getEnvVar(app.STORAGE_TYPE) {
 	case "fs", "sftp", "s3":
 		// ok
 	default:
-		log.Error("Invalid configuration: invalid STORAGE_TYPE value %q", getEnvVar(cli.STORAGE_TYPE))
+		log.Error("Invalid configuration: invalid STORAGE_TYPE value %q", getEnvVar(app.STORAGE_TYPE))
 		return false
 	}
 
-	if getEnvVar(cli.STORAGE_TYPE) == "s3" {
+	if getEnvVar(app.STORAGE_TYPE) == "s3" {
 		switch {
-		case getEnvVar(cli.STORAGE_S3_ACCESS_KEY) == "":
+		case getEnvVar(app.STORAGE_S3_ACCESS_KEY) == "":
 			log.Error("Invalid configuration: STORAGE_S3_ACCESS_KEY is empty")
 			return false
-		case getEnvVar(cli.STORAGE_S3_SECRET_KEY) == "":
+		case getEnvVar(app.STORAGE_S3_SECRET_KEY) == "":
 			log.Error("Invalid configuration: STORAGE_S3_SECRET_KEY is empty")
 			return false
-		case getEnvVar(cli.STORAGE_S3_BUCKET) == "":
+		case getEnvVar(app.STORAGE_S3_BUCKET) == "":
 			log.Error("Invalid configuration: STORAGE_S3_BUCKET is empty")
 			return false
 		}
-	} else if getEnvVar(cli.STORAGE_TYPE) == "sftp" {
+	} else if getEnvVar(app.STORAGE_TYPE) == "sftp" {
 		switch {
-		case getEnvVar(cli.STORAGE_SFTP_HOST) == "":
+		case getEnvVar(app.STORAGE_SFTP_HOST) == "":
 			log.Error("Invalid configuration: STORAGE_SFTP_HOST is empty")
 			return false
-		case getEnvVar(cli.STORAGE_SFTP_USER) == "":
+		case getEnvVar(app.STORAGE_SFTP_USER) == "":
 			log.Error("Invalid configuration: STORAGE_SFTP_USER is empty")
 			return false
-		case getEnvVar(cli.STORAGE_SFTP_KEY) == "":
+		case getEnvVar(app.STORAGE_SFTP_KEY) == "":
 			log.Error("Invalid configuration: STORAGE_SFTP_KEY is empty")
 			return false
-		case getEnvVar(cli.STORAGE_SFTP_PATH) == "":
+		case getEnvVar(app.STORAGE_SFTP_PATH) == "":
 			log.Error("Invalid configuration: STORAGE_SFTP_PATH is empty")
 			return false
 		}
 	} else {
-		if getEnvVar(cli.STORAGE_FS_PATH) == "" {
+		if getEnvVar(app.STORAGE_FS_PATH) == "" {
 			log.Error("Invalid configuration: STORAGE_FS_PATH is empty")
 			return false
 		}
@@ -409,9 +409,9 @@ func getBackuper(target string) (backuper.Backuper, error) {
 	}
 
 	switch target {
-	case cli.TARGET_JIRA:
+	case app.TARGET_JIRA:
 		bkpr, err = jira.NewBackuper(config)
-	case cli.TARGET_CONFLUENCE:
+	case app.TARGET_CONFLUENCE:
 		bkpr, err = confluence.NewBackuper(config)
 	default:
 		return nil, fmt.Errorf("Unknown or unsupported target %q", target)
@@ -423,22 +423,22 @@ func getBackuper(target string) (backuper.Backuper, error) {
 // getBackuperConfig returns configuration for backuper
 func getBackuperConfig(target string) (*backuper.Config, error) {
 	switch target {
-	case cli.TARGET_JIRA:
+	case app.TARGET_JIRA:
 		return &backuper.Config{
-			Account:         getEnvVar(cli.ACCESS_ACCOUNT),
-			Email:           getEnvVar(cli.ACCESS_EMAIL),
-			APIKey:          getEnvVar(cli.ACCESS_API_KEY),
-			WithAttachments: getEnvVarFlag(cli.JIRA_INCLUDE_ATTACHMENTS, true),
-			ForCloud:        getEnvVarFlag(cli.JIRA_CLOUD_FORMAT, true),
+			Account:         getEnvVar(app.ACCESS_ACCOUNT),
+			Email:           getEnvVar(app.ACCESS_EMAIL),
+			APIKey:          getEnvVar(app.ACCESS_API_KEY),
+			WithAttachments: getEnvVarFlag(app.JIRA_INCLUDE_ATTACHMENTS, true),
+			ForCloud:        getEnvVarFlag(app.JIRA_CLOUD_FORMAT, true),
 		}, nil
 
-	case cli.TARGET_CONFLUENCE:
+	case app.TARGET_CONFLUENCE:
 		return &backuper.Config{
-			Account:         getEnvVar(cli.ACCESS_ACCOUNT),
-			Email:           getEnvVar(cli.ACCESS_EMAIL),
-			APIKey:          getEnvVar(cli.ACCESS_API_KEY),
-			WithAttachments: getEnvVarFlag(cli.CONFLUENCE_INCLUDE_ATTACHMENTS, true),
-			ForCloud:        getEnvVarFlag(cli.CONFLUENCE_CLOUD_FORMAT, true),
+			Account:         getEnvVar(app.ACCESS_ACCOUNT),
+			Email:           getEnvVar(app.ACCESS_EMAIL),
+			APIKey:          getEnvVar(app.ACCESS_API_KEY),
+			WithAttachments: getEnvVarFlag(app.CONFLUENCE_INCLUDE_ATTACHMENTS, true),
+			ForCloud:        getEnvVarFlag(app.CONFLUENCE_CLOUD_FORMAT, true),
 		}, nil
 	}
 
@@ -450,36 +450,36 @@ func getUploader(target string) (uploader.Uploader, error) {
 	var err error
 	var updr uploader.Uploader
 
-	switch getEnvVar(cli.STORAGE_TYPE) {
+	switch getEnvVar(app.STORAGE_TYPE) {
 	case "fs":
 		updr, err = fs.NewUploader(&fs.Config{
-			Path: path.Join(getEnvVar(cli.STORAGE_FS_PATH), target),
-			Mode: parseMode(getEnvVar(cli.STORAGE_FS_MODE, "0640")),
+			Path: path.Join(getEnvVar(app.STORAGE_FS_PATH), target),
+			Mode: parseMode(getEnvVar(app.STORAGE_FS_MODE, "0640")),
 		})
 
 	case "sftp":
-		key, err := base64.StdEncoding.DecodeString(getEnvVar(cli.STORAGE_SFTP_KEY))
+		key, err := base64.StdEncoding.DecodeString(getEnvVar(app.STORAGE_SFTP_KEY))
 
 		if err != nil {
 			return nil, err
 		}
 
 		updr, err = sftp.NewUploader(&sftp.Config{
-			Host: getEnvVar(cli.STORAGE_SFTP_HOST),
-			User: getEnvVar(cli.STORAGE_SFTP_USER),
+			Host: getEnvVar(app.STORAGE_SFTP_HOST),
+			User: getEnvVar(app.STORAGE_SFTP_USER),
 			Key:  key,
-			Path: path.Join(getEnvVar(cli.STORAGE_SFTP_PATH), target),
-			Mode: parseMode(getEnvVar(cli.STORAGE_SFTP_MODE, "0640")),
+			Path: path.Join(getEnvVar(app.STORAGE_SFTP_PATH), target),
+			Mode: parseMode(getEnvVar(app.STORAGE_SFTP_MODE, "0640")),
 		})
 
 	case "s3":
 		updr, err = s3.NewUploader(&s3.Config{
-			Host:        getEnvVar(cli.STORAGE_S3_HOST, "storage.yandexcloud.net"),
-			Region:      getEnvVar(cli.STORAGE_S3_REGION, "ru-central1"),
-			AccessKeyID: getEnvVar(cli.STORAGE_S3_ACCESS_KEY),
-			SecretKey:   getEnvVar(cli.STORAGE_S3_SECRET_KEY),
-			Bucket:      getEnvVar(cli.STORAGE_S3_BUCKET),
-			Path:        path.Join(getEnvVar(cli.STORAGE_S3_PATH), target),
+			Host:        getEnvVar(app.STORAGE_S3_HOST, "storage.yandexcloud.net"),
+			Region:      getEnvVar(app.STORAGE_S3_REGION, "ru-central1"),
+			AccessKeyID: getEnvVar(app.STORAGE_S3_ACCESS_KEY),
+			SecretKey:   getEnvVar(app.STORAGE_S3_SECRET_KEY),
+			Bucket:      getEnvVar(app.STORAGE_S3_BUCKET),
+			Path:        path.Join(getEnvVar(app.STORAGE_S3_PATH), target),
 		})
 	}
 
@@ -491,10 +491,10 @@ func getOutputFile(target string) string {
 	var template string
 
 	switch target {
-	case cli.TARGET_JIRA:
-		template = strutil.Q(getEnvVar(cli.JIRA_OUTPUT_FILE), `jira-backup-%Y-%m-%d`) + ".zip"
-	case cli.TARGET_CONFLUENCE:
-		template = strutil.Q(getEnvVar(cli.CONFLUENCE_OUTPUT_FILE), `confluence-backup-%Y-%m-%d`) + ".zip"
+	case app.TARGET_JIRA:
+		template = strutil.Q(getEnvVar(app.JIRA_OUTPUT_FILE), `jira-backup-%Y-%m-%d`) + ".zip"
+	case app.TARGET_CONFLUENCE:
+		template = strutil.Q(getEnvVar(app.CONFLUENCE_OUTPUT_FILE), `confluence-backup-%Y-%m-%d`) + ".zip"
 	}
 
 	return timeutil.Format(time.Now(), template)

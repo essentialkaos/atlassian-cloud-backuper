@@ -1,4 +1,4 @@
-package cli
+package app
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
@@ -58,7 +58,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.0.2"
+	VER  = "0.0.3"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -205,11 +205,11 @@ func preConfigureUI() {
 
 	switch {
 	case fmtc.IsTrueColorSupported():
-		colorTagApp, colorTagVer = "{*}{#00AFFF}", "{#00AFFF}"
+		colorTagApp, colorTagVer = "{*}{#0065FF}", "{#0065FF}"
 	case fmtc.Is256ColorsSupported():
-		colorTagApp, colorTagVer = "{*}{#39}", "{#39}"
+		colorTagApp, colorTagVer = "{*}{#21}", "{#21}"
 	default:
-		colorTagApp, colorTagVer = "{*}{c}", "{c}"
+		colorTagApp, colorTagVer = "{*}{b}", "{b}"
 	}
 }
 
@@ -221,31 +221,17 @@ func addExtraOptions(m options.Map) {
 	}
 
 	knfu.AddOptions(m,
-		ACCESS_ACCOUNT,
-		ACCESS_EMAIL,
-		ACCESS_API_KEY,
+		ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
 		STORAGE_TYPE,
-		STORAGE_FS_PATH,
-		STORAGE_FS_MODE,
-		STORAGE_SFTP_HOST,
-		STORAGE_SFTP_USER,
-		STORAGE_SFTP_KEY,
-		STORAGE_SFTP_PATH,
-		STORAGE_SFTP_MODE,
-		STORAGE_S3_HOST,
-		STORAGE_S3_ACCESS_KEY,
-		STORAGE_S3_SECRET_KEY,
-		STORAGE_S3_BUCKET,
-		STORAGE_S3_PATH,
-		JIRA_OUTPUT_FILE,
-		JIRA_INCLUDE_ATTACHMENTS,
-		JIRA_CLOUD_FORMAT,
-		CONFLUENCE_OUTPUT_FILE,
-		CONFLUENCE_INCLUDE_ATTACHMENTS,
-		CONFLUENCE_CLOUD_FORMAT,
+		STORAGE_FS_PATH, STORAGE_FS_MODE,
+		STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
+		STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
+		STORAGE_S3_HOST, STORAGE_S3_ACCESS_KEY, STORAGE_S3_SECRET_KEY,
+		STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+		JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
+		CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
 		TEMP_DIR,
-		LOG_FORMAT,
-		LOG_LEVEL,
+		LOG_FORMAT, LOG_LEVEL,
 	)
 }
 
@@ -679,6 +665,9 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 // genUsage generates usage info
 func genUsage(section string) *usage.Info {
 	info := usage.NewInfo("", "target")
+
+	info.WrapLen = 100
+	info.AppNameColorTag = colorTagApp
 
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
 	info.AddOption(OPT_INTERACTIVE, "Interactive mode")

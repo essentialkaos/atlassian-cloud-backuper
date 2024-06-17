@@ -10,7 +10,7 @@ package main
 import (
 	_ "embed"
 
-	CLI "github.com/essentialkaos/atlassian-cloud-backuper/cli"
+	APP "github.com/essentialkaos/atlassian-cloud-backuper/app"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -24,5 +24,5 @@ var gitrev string
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 func main() {
-	CLI.Run(gitrev, gomod)
+	APP.Run(gitrev, gomod)
 }
