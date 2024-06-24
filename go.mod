@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.30.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.21
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.56.1
-	github.com/essentialkaos/ek/v12 v12.126.1
+	github.com/essentialkaos/ek/v12 v12.127.0
 	github.com/pkg/sftp v1.13.6
 	golang.org/x/crypto v0.24.0
 )
