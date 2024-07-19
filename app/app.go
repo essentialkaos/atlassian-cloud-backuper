@@ -14,34 +14,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/essentialkaos/ek/v12/errutil"
-	"github.com/essentialkaos/ek/v12/events"
-	"github.com/essentialkaos/ek/v12/fmtc"
-	"github.com/essentialkaos/ek/v12/fmtutil"
-	"github.com/essentialkaos/ek/v12/fsutil"
-	"github.com/essentialkaos/ek/v12/knf"
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/options"
-	"github.com/essentialkaos/ek/v12/path"
-	"github.com/essentialkaos/ek/v12/req"
-	"github.com/essentialkaos/ek/v12/spinner"
-	"github.com/essentialkaos/ek/v12/support"
-	"github.com/essentialkaos/ek/v12/support/deps"
-	"github.com/essentialkaos/ek/v12/system/container"
-	"github.com/essentialkaos/ek/v12/terminal/tty"
-	"github.com/essentialkaos/ek/v12/timeutil"
-	"github.com/essentialkaos/ek/v12/tmp"
-	"github.com/essentialkaos/ek/v12/usage"
-	"github.com/essentialkaos/ek/v12/usage/completion/bash"
-	"github.com/essentialkaos/ek/v12/usage/completion/fish"
-	"github.com/essentialkaos/ek/v12/usage/completion/zsh"
-	"github.com/essentialkaos/ek/v12/usage/man"
-	"github.com/essentialkaos/ek/v12/usage/update"
+	"github.com/essentialkaos/ek/v13/errutil"
+	"github.com/essentialkaos/ek/v13/events"
+	"github.com/essentialkaos/ek/v13/fmtc"
+	"github.com/essentialkaos/ek/v13/fmtutil"
+	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/knf"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/options"
+	"github.com/essentialkaos/ek/v13/path"
+	"github.com/essentialkaos/ek/v13/req"
+	"github.com/essentialkaos/ek/v13/spinner"
+	"github.com/essentialkaos/ek/v13/support"
+	"github.com/essentialkaos/ek/v13/support/deps"
+	"github.com/essentialkaos/ek/v13/system/container"
+	"github.com/essentialkaos/ek/v13/terminal/tty"
+	"github.com/essentialkaos/ek/v13/timeutil"
+	"github.com/essentialkaos/ek/v13/tmp"
+	"github.com/essentialkaos/ek/v13/usage"
+	"github.com/essentialkaos/ek/v13/usage/completion/bash"
+	"github.com/essentialkaos/ek/v13/usage/completion/fish"
+	"github.com/essentialkaos/ek/v13/usage/completion/zsh"
+	"github.com/essentialkaos/ek/v13/usage/man"
+	"github.com/essentialkaos/ek/v13/usage/update"
 
-	knfu "github.com/essentialkaos/ek/v12/knf/united"
-	knfv "github.com/essentialkaos/ek/v12/knf/validators"
-	knff "github.com/essentialkaos/ek/v12/knf/validators/fs"
-	knfn "github.com/essentialkaos/ek/v12/knf/validators/network"
+	knfu "github.com/essentialkaos/ek/v13/knf/united"
+	knfv "github.com/essentialkaos/ek/v13/knf/validators"
+	knff "github.com/essentialkaos/ek/v13/knf/validators/fs"
+	knfn "github.com/essentialkaos/ek/v13/knf/validators/network"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
@@ -199,7 +199,7 @@ func Run(gitRev string, gomod []byte) {
 
 // preConfigureUI preconfigures UI based on information about user terminal
 func preConfigureUI() {
-	if !tty.IsTTY() {
+	if !tty.IsTTY() || tty.IsSystemd() || container.GetEngine() == container.YANDEX {
 		fmtc.DisableColors = true
 	}
 
@@ -277,23 +277,23 @@ func loadConfig() error {
 // validateConfig validates configuration file values
 func validateConfig() error {
 	validators := []*knf.Validator{
-		{ACCESS_ACCOUNT, knfv.Empty, nil},
-		{ACCESS_EMAIL, knfv.Empty, nil},
-		{ACCESS_API_KEY, knfv.Empty, nil},
+		{ACCESS_ACCOUNT, knfv.Set, nil},
+		{ACCESS_EMAIL, knfv.Set, nil},
+		{ACCESS_API_KEY, knfv.Set, nil},
 		{ACCESS_EMAIL, knfn.Mail, nil},
-		{STORAGE_TYPE, knfv.NotContains, []string{
+		{STORAGE_TYPE, knfv.SetToAnyIgnoreCase, []string{
 			"fs", "sftp", "s3",
 		}},
-		{LOG_FORMAT, knfv.NotContains, []string{
+		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},
-		{LOG_LEVEL, knfv.NotContains, []string{
+		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, []string{
 			"", "debug", "info", "warn", "error", "crit",
 		}},
 		{TEMP_DIR, knff.Perms, "DW"},
 	}
 
-	switch knfu.GetS(STORAGE_TYPE) {
+	switch strings.ToLower(knfu.GetS(STORAGE_TYPE)) {
 	case "fs":
 		validators = append(validators,
 			&knf.Validator{STORAGE_FS_PATH, knff.Perms, "DRW"},
@@ -301,19 +301,19 @@ func validateConfig() error {
 
 	case "sftp":
 		validators = append(validators,
-			&knf.Validator{STORAGE_SFTP_HOST, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_USER, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_PATH, knfv.Empty, nil},
+			&knf.Validator{STORAGE_SFTP_HOST, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_USER, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_PATH, knfv.Set, nil},
 		)
 
 	case "s3":
 		validators = append(validators,
-			&knf.Validator{STORAGE_S3_HOST, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_BUCKET, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_PATH, knfv.Empty, nil},
+			&knf.Validator{STORAGE_S3_HOST, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_PATH, knfv.Set, nil},
 		)
 	}
 
@@ -331,7 +331,7 @@ func setupLogger() error {
 	var err error
 
 	if knfu.GetS(LOG_FILE) != "" {
-		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 640))
+		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0640))
 
 		if err != nil {
 			return err
@@ -347,7 +347,7 @@ func setupLogger() error {
 	if knfu.GetS(LOG_FORMAT) == "" && container.IsContainer() {
 		log.Global.UseJSON = true
 	} else {
-		switch knfu.GetS(LOG_FORMAT) {
+		switch strings.ToLower(knfu.GetS(LOG_FORMAT)) {
 		case "json":
 			log.Global.UseJSON = true
 		case "text", "":

@@ -18,12 +18,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/req"
-	"github.com/essentialkaos/ek/v12/strutil"
-	"github.com/essentialkaos/ek/v12/timeutil"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/req"
+	"github.com/essentialkaos/ek/v13/strutil"
+	"github.com/essentialkaos/ek/v13/timeutil"
 
-	knfu "github.com/essentialkaos/ek/v12/knf/united"
+	knfu "github.com/essentialkaos/ek/v13/knf/united"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/app"
 

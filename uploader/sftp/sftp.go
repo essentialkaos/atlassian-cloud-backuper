@@ -17,11 +17,11 @@ import (
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 
-	"github.com/essentialkaos/ek/v12/events"
-	"github.com/essentialkaos/ek/v12/fsutil"
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/passthru"
-	"github.com/essentialkaos/ek/v12/path"
+	"github.com/essentialkaos/ek/v13/events"
+	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/passthru"
+	"github.com/essentialkaos/ek/v13/path"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 )
