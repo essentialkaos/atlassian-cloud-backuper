@@ -27,7 +27,7 @@ all: atlassian-cloud-backuper ## Build all binaries
 pack: clean ## Create zip file with YC function
 	@echo "[36;1mPacking YC function to zip…[0m"
 	@go build cloudfunc/ycfunc.go && rm -f ycfunc
-	@zip atlassian-cloud-backuper -r "app" "backuper" "cloudfunc" "uploader"
+	@zip atlassian-cloud-backuper -r "app" "backuper" "cloudfunc" "uploader" go.*
 
 atlassian-cloud-backuper:
 	@echo "[36;1mBuilding atlassian-cloud-backuper…[0m"
