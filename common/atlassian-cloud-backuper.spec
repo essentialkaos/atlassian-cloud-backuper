@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.0.3
+Version:        0.0.4
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -22,7 +22,7 @@ Source100:      checksum.sha512
 
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  golang >= 1.21
+BuildRequires:  golang >= 1.22
 
 Provides:       %{name} = %{version}-%{release}
 
@@ -40,7 +40,10 @@ Tool for backuping Atlassian cloud services (Jira and Confluence).
 
 %build
 if [[ ! -d "%{name}/vendor" ]] ; then
-  echo "This package requires vendored dependencies"
+  echo -e "----\nThis package requires vendored dependencies\n----"
+  exit 1
+elif [[ -f "%{name}/%{name}" ]] ; then
+  echo -e "----\nSources must not contain precompiled binaries\n----"
   exit 1
 fi
 
@@ -110,6 +113,9 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Fri Jul 19 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.4-0
+- Dependencies update
+
 * Wed Jun 12 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.3-0
 - Dependencies update
 
