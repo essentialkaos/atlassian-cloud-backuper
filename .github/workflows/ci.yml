@@ -2,9 +2,6 @@ name: CI
 
 on:
   workflow_call:
-    secrets:
-      CODACY_PROJECT_TOKEN:
-        required: true
 
 permissions:
   actions: read
