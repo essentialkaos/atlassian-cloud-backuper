@@ -57,7 +57,14 @@ func startApp(args options.Arguments) error {
 	bkpr.SetDispatcher(dispatcher)
 
 	outputFileName := getOutputFileName(target)
-	tmpFile := path.Join(temp.MkName(".zip"), outputFileName)
+	tmpDir, err := temp.MkDir()
+
+	if err != nil {
+		spinner.Done(false)
+		return fmt.Errorf("Can't create temporary directory: %v", err)
+	}
+
+	tmpFile := path.Join(tmpDir, outputFileName)
 
 	err = bkpr.Backup(tmpFile)
 
