@@ -6,7 +6,7 @@ ARG REGISTRY="docker.io"
 
 FROM ${REGISTRY}/essentialkaos/golang:alpine3.18 as builder
 
-WORKDIR /go/src/github.com/essentialkaos/{{SHORT_NAME}}
+WORKDIR /go/src/github.com/essentialkaos/atlassian-cloud-backuper
 
 COPY . .
 
