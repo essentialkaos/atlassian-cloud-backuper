@@ -1,4 +1,4 @@
-name: "Docker Push"
+name: CD (Release)
 
 on:
   release:
@@ -19,14 +19,12 @@ permissions:
 
 env:
   IMAGE_NAME: ${{ github.repository }}
+  DOCKER_FILE: alpine
 
 jobs:
-  Docker:
-    name: Docker Build & Publish
+  BuildImage:
+    name: Image Build & Publish
     runs-on: ubuntu-latest
-
-    env:
-      DOCKER_FILE: alpine
 
     steps:
       - name: Checkout
@@ -92,7 +90,7 @@ jobs:
       - name: Check if build/rebuild is required
         id: build_check
         run: |
-          if [[ "${{github.event_name}}" == "release" ]] ; then
+          if [[ "$GITHUB_EVENT_NAME" == "release" ]] ; then
             echo "build=true" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -106,9 +104,8 @@ jobs:
           echo -e "::group::\033[34mDownloading built image…\033[0m"
 
           if ! docker pull ghcr.io/${{env.IMAGE_NAME}}:latest ; then
-            echo "::warning::Rebuild is required (reason: new image)"
-            echo "build=true" >> $GITHUB_OUTPUT
-            exit 0
+            echo "::error::Can't download image ghcr.io/${{env.IMAGE_NAME}}:latest"
+            exit 1
           fi
 
           echo "::endgroup::"
