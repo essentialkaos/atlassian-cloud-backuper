@@ -97,6 +97,8 @@ const (
 	LOG_LEVEL                      = "log:level"
 )
 
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 const (
 	TARGET_JIRA       = "jira"
 	TARGET_CONFLUENCE = "confluence"
@@ -114,6 +116,7 @@ const (
 var optMap = options.Map{
 	OPT_CONFIG:      {Value: "/etc/atlassian-cloud-backuper.knf"},
 	OPT_INTERACTIVE: {Type: options.BOOL},
+	OPT_SERVER:      {Type: options.BOOL},
 	OPT_NO_COLOR:    {Type: options.BOOL},
 	OPT_HELP:        {Type: options.MIXED},
 	OPT_VER:         {Type: options.MIXED},
@@ -491,6 +494,9 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, ACCESS_ACCOUNT, "Account name", "name")
 		addUnitedOption(info, ACCESS_EMAIL, "User email with access to API", "email")
 		addUnitedOption(info, ACCESS_API_KEY, "API key", "key")
+		addUnitedOption(info, SERVER_IP, "HTTP server IP", "ip")
+		addUnitedOption(info, SERVER_PORT, "HTTP server port", "port")
+		addUnitedOption(info, SERVER_ACCESS_TOKEN, "HTTP access token", "token")
 		addUnitedOption(info, STORAGE_TYPE, "Storage type", "fs/sftp/s3")
 		addUnitedOption(info, STORAGE_FS_PATH, "Path on system for backups", "path")
 		addUnitedOption(info, STORAGE_FS_MODE, "File mode on system", "mode")
