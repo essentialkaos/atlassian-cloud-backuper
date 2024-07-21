@@ -334,8 +334,8 @@ func validateConfig() error {
 
 	if options.GetB(OPT_SERVER) {
 		validators = append(validators,
-			&knf.Validator{SERVER_PORT, knfn.IP, nil},
-			&knf.Validator{SERVER_IP, knfn.Port, nil},
+			&knf.Validator{SERVER_IP, knfn.IP, nil},
+			&knf.Validator{SERVER_PORT, knfn.Port, nil},
 		)
 	}
 
