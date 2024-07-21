@@ -9,6 +9,17 @@
   # API key
   api-key:
 
+[server]
+
+  # HTTP server IP
+  ip:
+
+  # HTTP server port
+  port: 8080
+
+  # Unique token for requests
+  access-token:
+
 [storage]
 
   # Storage type (fs/sftp/s3)
