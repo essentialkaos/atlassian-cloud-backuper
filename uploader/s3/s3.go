@@ -75,11 +75,18 @@ func (u *S3Uploader) SetDispatcher(d *events.Dispatcher) {
 
 // Upload uploads given file to S3 storage
 func (u *S3Uploader) Upload(file, fileName string) error {
+	var outputFile string
+
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
 
 	lastUpdate := time.Now()
 	fileSize := fsutil.GetSize(file)
-	outputFile := path.Join(u.config.Path, fileName)
+
+	if u.config.Path == "" {
+		outputFile = fileName
+	} else {
+		outputFile = path.Join(u.config.Path, fileName)
+	}
 
 	log.Info(
 		"Uploading backup file to %s:%s (%s/%s)",
@@ -87,8 +94,8 @@ func (u *S3Uploader) Upload(file, fileName string) error {
 	)
 
 	client := s3.New(s3.Options{
-		Region:       "ru-central1",
-		BaseEndpoint: aws.String("https://storage.yandexcloud.net"),
+		Region:       u.config.Region,
+		BaseEndpoint: aws.String("https://" + u.config.Host),
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
 			u.config.AccessKeyID, u.config.SecretKey, "",
 		)),
@@ -111,7 +118,11 @@ func (u *S3Uploader) Upload(file, fileName string) error {
 
 		u.dispatcher.Dispatch(
 			uploader.EVENT_UPLOAD_PROGRESS,
-			&uploader.ProgressInfo{Progress: r.Progress(), Current: r.Current(), Total: r.Total()},
+			&uploader.ProgressInfo{
+				Progress: r.Progress(),
+				Current:  r.Current(),
+				Total:    r.Total(),
+			},
 		)
 
 		lastUpdate = time.Now()
@@ -135,9 +146,15 @@ func (u *S3Uploader) Upload(file, fileName string) error {
 
 // Write writes data from given reader to given file
 func (u *S3Uploader) Write(r io.ReadCloser, fileName string) error {
+	var outputFile string
+
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
 
-	outputFile := path.Join(u.config.Path, fileName)
+	if u.config.Path == "" {
+		outputFile = fileName
+	} else {
+		outputFile = path.Join(u.config.Path, fileName)
+	}
 
 	log.Info(
 		"Uploading backup file to %s:%s (%s/%s)",
@@ -145,8 +162,8 @@ func (u *S3Uploader) Write(r io.ReadCloser, fileName string) error {
 	)
 
 	client := s3.New(s3.Options{
-		Region:       "ru-central1",
-		BaseEndpoint: aws.String("https://storage.yandexcloud.net"),
+		Region:       u.config.Region,
+		BaseEndpoint: aws.String("https://" + u.config.Host),
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
 			u.config.AccessKeyID, u.config.SecretKey, "",
 		)),

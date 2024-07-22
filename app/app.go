@@ -328,7 +328,6 @@ func validateConfig() error {
 			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
-			&knf.Validator{STORAGE_S3_PATH, knfv.Set, nil},
 		)
 	}
 
