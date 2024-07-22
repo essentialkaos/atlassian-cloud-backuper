@@ -33,10 +33,6 @@ bash <(curl -fsSL https://apps.kaos.st/get) atlassian-cloud-backuper
 
 The latest version of `atlassian-cloud-backuper` also available as container image on [GitHub Container Registry](https://kaos.sh/p/atlassian-cloud-backuper) and [Docker Hub](https://kaos.sh/d/atlassian-cloud-backuper).
 
-#### Cloud/serverless function
-
-You can use `atlassian-cloud-backuper` as a serverless function on Yandex.Cloud. More information about function configuration can be found in [this documentation](cloudfunc/README.md).
-
 ### Usage
 
 #### Standalone
