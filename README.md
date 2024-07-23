@@ -1,9 +1,10 @@
 <p align="center"><a href="#readme"><img src=".github/images/card.svg"/></a></p>
 
 <p align="center">
-  <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://kaos.sh/w/atlassian-cloud-backuper/ci.svg" alt="GitHub Actions CI Status" /></a>
   <a href="https://kaos.sh/l/atlassian-cloud-backuper"><img src="https://kaos.sh/l/c742a6f5789762426f97.svg" alt="Code Climate Maintainability" /></a>
   <a href="https://kaos.sh/b/atlassian-cloud-backuper"><img src="https://kaos.sh/b/f337729e-ce98-4c15-9123-420f9feb443f.svg" alt="Codebeat badge" /></a>
+  <br/>
+  <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://kaos.sh/w/atlassian-cloud-backuper/ci.svg" alt="GitHub Actions CI Status" /></a>
   <a href="https://kaos.sh/w/atlassian-cloud-backuper/codeql"><img src="https://kaos.sh/w/atlassian-cloud-backuper/codeql.svg" alt="GitHub Actions CodeQL Status" /></a>
   <a href="#license"><img src=".github/images/license.svg"/></a>
 </p>
@@ -17,8 +18,8 @@
 #### From [ESSENTIAL KAOS Public Repository](https://kaos.sh/kaos-repo)
 
 ```bash
-sudo yum install -y https://pkgs.kaos.st/kaos-repo-latest.el$(grep 'CPE_NAME' /etc/os-release | tr -d '"' | cut -d':' -f5).noarch.rpm
-sudo yum install atlassian-cloud-backuper
+sudo dnf install -y https://pkgs.kaos.st/kaos-repo-latest.el$(grep 'CPE_NAME' /etc/os-release | tr -d '"' | cut -d':' -f5).noarch.rpm
+sudo dnf install atlassian-cloud-backuper
 ```
 
 #### Prebuilt binaries
