@@ -31,6 +31,8 @@ import (
 func startApp(args options.Arguments) error {
 	var dispatcher *events.Dispatcher
 
+	target := args.Get(0).String()
+
 	if options.GetB(OPT_INTERACTIVE) {
 		dispatcher = events.NewDispatcher()
 		addEventsHandlers(dispatcher)
@@ -44,21 +46,29 @@ func startApp(args options.Arguments) error {
 
 	defer temp.Clean()
 
-	target := args.Get(0).String()
+	fmtc.NewLine()
+
 	bkpr, err := getBackuper(target)
 
 	if err != nil {
-		return fmt.Errorf("Can't start backuping process: %v", err)
+		return fmt.Errorf("Can't start backuping process: %w", err)
+	}
+
+	updr, err := getUploader(target)
+
+	if err != nil {
+		return fmt.Errorf("Can't start backuping process: %w", err)
 	}
 
 	bkpr.SetDispatcher(dispatcher)
+	updr.SetDispatcher(dispatcher)
 
 	outputFileName := getOutputFileName(target)
 	tmpDir, err := temp.MkDir()
 
 	if err != nil {
 		spinner.Done(false)
-		return fmt.Errorf("Can't create temporary directory: %v", err)
+		return fmt.Errorf("Can't create temporary directory: %w", err)
 	}
 
 	tmpFile := path.Join(tmpDir, outputFileName)
@@ -67,24 +77,16 @@ func startApp(args options.Arguments) error {
 
 	if err != nil {
 		spinner.Done(false)
-		return fmt.Errorf("Error while backuping process: %v", err)
+		return fmt.Errorf("Error while backuping process: %w", err)
 	}
 
 	log.Info("Backup process successfully finished!")
-
-	updr, err := getUploader(target)
-
-	if err != nil {
-		return fmt.Errorf("Can't start uploading process: %v", err)
-	}
-
-	updr.SetDispatcher(dispatcher)
 
 	err = updr.Upload(tmpFile, outputFileName)
 
 	if err != nil {
 		spinner.Done(false)
-		return fmt.Errorf("Error while uploading process: %v", err)
+		return fmt.Errorf("Error while uploading process: %w", err)
 	}
 
 	return nil
@@ -93,7 +95,6 @@ func startApp(args options.Arguments) error {
 // addEventsHandlers registers events handlers
 func addEventsHandlers(dispatcher *events.Dispatcher) {
 	dispatcher.AddHandler(backuper.EVENT_BACKUP_STARTED, func(payload any) {
-		fmtc.NewLine()
 		spinner.Show("Starting downloading process")
 	})
 

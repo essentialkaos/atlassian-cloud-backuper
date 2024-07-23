@@ -206,7 +206,12 @@ func Run(gitRev string, gomod []byte) {
 	}
 
 	if err != nil {
+		if options.GetB(OPT_INTERACTIVE) {
+			terminal.Error(err)
+		}
+
 		log.Crit(err.Error())
+
 		os.Exit(1)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/essentialkaos/ek/v13/fsutil"
@@ -94,17 +95,15 @@ func getBackuperConfig(target string) (*backuper.Config, error) {
 
 // getUploader returns uploader instance
 func getUploader(target string) (uploader.Uploader, error) {
-	var err error
-	var updr uploader.Uploader
 	var secret *katana.Secret
 
 	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" {
 		secret = katana.NewSecret(knfu.GetS(STORAGE_ENCRYPTION_KEY))
 	}
 
-	switch knfu.GetS(STORAGE_TYPE) {
+	switch strings.ToLower(knfu.GetS(STORAGE_TYPE)) {
 	case STORAGE_FS:
-		updr, err = fs.NewUploader(&fs.Config{
+		return fs.NewUploader(&fs.Config{
 			Path:   path.Join(knfu.GetS(STORAGE_FS_PATH), target),
 			Mode:   knfu.GetM(STORAGE_FS_MODE, 0600),
 			Secret: secret,
@@ -117,7 +116,7 @@ func getUploader(target string) (uploader.Uploader, error) {
 			return nil, err
 		}
 
-		updr, err = sftp.NewUploader(&sftp.Config{
+		return sftp.NewUploader(&sftp.Config{
 			Host:   knfu.GetS(STORAGE_SFTP_HOST),
 			User:   knfu.GetS(STORAGE_SFTP_USER),
 			Key:    keyData,
@@ -127,7 +126,7 @@ func getUploader(target string) (uploader.Uploader, error) {
 		})
 
 	case STORAGE_S3:
-		updr, err = s3.NewUploader(&s3.Config{
+		return s3.NewUploader(&s3.Config{
 			Host:        knfu.GetS(STORAGE_S3_HOST),
 			Region:      knfu.GetS(STORAGE_S3_REGION),
 			AccessKeyID: knfu.GetS(STORAGE_S3_ACCESS_KEY),
@@ -138,7 +137,7 @@ func getUploader(target string) (uploader.Uploader, error) {
 		})
 	}
 
-	return updr, err
+	return nil, fmt.Errorf("Unknown storage type %q", knfu.GetS(STORAGE_TYPE))
 }
 
 // readPrivateKeyData reads private key data

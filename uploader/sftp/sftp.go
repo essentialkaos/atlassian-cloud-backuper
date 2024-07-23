@@ -61,7 +61,7 @@ func NewUploader(config *Config) (*SFTPUploader, error) {
 		return nil, err
 	}
 
-	return &SFTPUploader{config, nil}, nil
+	return &SFTPUploader{config: config}, nil
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
