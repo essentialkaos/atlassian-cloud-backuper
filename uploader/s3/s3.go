@@ -15,15 +15,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/essentialkaos/ek/v12/events"
-	"github.com/essentialkaos/ek/v12/fsutil"
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/passthru"
-	"github.com/essentialkaos/ek/v12/path"
+	"github.com/essentialkaos/ek/v13/events"
+	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/passthru"
+	"github.com/essentialkaos/ek/v13/path"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+
+	"github.com/essentialkaos/katana"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 )
@@ -38,6 +40,7 @@ type Config struct {
 	SecretKey   string
 	Bucket      string
 	Path        string
+	Secret      *katana.Secret
 }
 
 // S3Uploader is S3 uploader instance
@@ -75,87 +78,87 @@ func (u *S3Uploader) SetDispatcher(d *events.Dispatcher) {
 
 // Upload uploads given file to S3 storage
 func (u *S3Uploader) Upload(file, fileName string) error {
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
-
-	lastUpdate := time.Now()
-	fileSize := fsutil.GetSize(file)
-	outputFile := path.Join(u.config.Path, fileName)
-
-	log.Info(
-		"Uploading backup file to %s:%s (%s/%s)",
-		u.config.Bucket, u.config.Path, u.config.Host, u.config.Region,
-	)
-
-	client := s3.New(s3.Options{
-		Region:       "ru-central1",
-		BaseEndpoint: aws.String("https://storage.yandexcloud.net"),
-		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
-			u.config.AccessKeyID, u.config.SecretKey, "",
-		)),
-	})
-
-	inputFD, err := os.OpenFile(file, os.O_RDONLY, 0)
+	fd, err := os.Open(file)
 
 	if err != nil {
 		return fmt.Errorf("Can't open backup file for reading: %v", err)
 	}
 
-	defer inputFD.Close()
+	defer fd.Close()
 
-	r := passthru.NewReader(inputFD, fileSize)
-
-	r.Update = func(n int) {
-		if time.Since(lastUpdate) < 3*time.Second {
-			return
-		}
-
-		u.dispatcher.Dispatch(
-			uploader.EVENT_UPLOAD_PROGRESS,
-			&uploader.ProgressInfo{Progress: r.Progress(), Current: r.Current(), Total: r.Total()},
-		)
-
-		lastUpdate = time.Now()
-	}
-
-	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
-		Bucket: aws.String(u.config.Bucket),
-		Key:    aws.String(outputFile),
-		Body:   r,
-	})
+	err = u.Write(fd, fileName, fsutil.GetSize(file))
 
 	if err != nil {
-		return fmt.Errorf("Can't upload file to S3: %v", err)
+		return fmt.Errorf("Can't save backup: %w", err)
 	}
-
-	log.Info("File successfully uploaded to S3!")
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "S3")
 
 	return nil
 }
 
 // Write writes data from given reader to given file
-func (u *S3Uploader) Write(r io.ReadCloser, fileName string) error {
+func (u *S3Uploader) Write(r io.ReadCloser, fileName string, fileSize int64) error {
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "S3")
 
-	outputFile := path.Join(u.config.Path, fileName)
+	var rr io.Reader
+	var err error
+
+	lastUpdate := time.Now()
+	outputFile := fileName
+
+	if u.config.Path != "" {
+		outputFile = path.Join(u.config.Path, fileName)
+	}
 
 	log.Info(
 		"Uploading backup file to %s:%s (%s/%s)",
 		u.config.Bucket, u.config.Path, u.config.Host, u.config.Region,
 	)
 
+	rr = r
+
+	if u.config.Secret != nil {
+		sr, err := u.config.Secret.NewReader(r, katana.MODE_ENCRYPT)
+
+		if err != nil {
+			return fmt.Errorf("Can't create encrypted reader: %w", err)
+		}
+
+		rr = sr
+	}
+
+	if fileSize > 0 {
+		pr := passthru.NewReader(rr, fileSize)
+
+		pr.Update = func(n int) {
+			if time.Since(lastUpdate) < 3*time.Second {
+				return
+			}
+
+			u.dispatcher.Dispatch(
+				uploader.EVENT_UPLOAD_PROGRESS,
+				&uploader.ProgressInfo{
+					Progress: pr.Progress(),
+					Current:  pr.Current(),
+					Total:    pr.Total(),
+				},
+			)
+		}
+
+		rr = pr
+	}
+
 	client := s3.New(s3.Options{
-		Region:       "ru-central1",
-		BaseEndpoint: aws.String("https://storage.yandexcloud.net"),
+		Region:       u.config.Region,
+		BaseEndpoint: aws.String("https://" + u.config.Host),
 		Credentials: aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(
 			u.config.AccessKeyID, u.config.SecretKey, "",
 		)),
 	})
 
-	_, err := client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.Bucket),
 		Key:    aws.String(outputFile),
-		Body:   r,
+		Body:   rr,
 	})
 
 	if err != nil {

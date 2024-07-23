@@ -10,7 +10,7 @@ package uploader
 import (
 	"io"
 
-	"github.com/essentialkaos/ek/v12/events"
+	"github.com/essentialkaos/ek/v13/events"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -33,12 +33,14 @@ type ProgressInfo struct {
 
 // Uploader is generic uploader interface
 type Uploader interface {
-	// Upload uploads given file to storage
-	Upload(file, fileName string) error
-
 	// SetDispatcher sets events dispatcher
 	SetDispatcher(d *events.Dispatcher)
 
+	// Upload uploads given file to storage
+	Upload(file, fileName string) error
+
 	// Write writes data from given reader to given file
-	Write(r io.ReadCloser, fileName string) error
+	Write(r io.ReadCloser, fileName string, fileSize int64) error
 }
+
+// ////////////////////////////////////////////////////////////////////////////////// //

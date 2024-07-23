@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/essentialkaos/ek/v12/events"
+	"github.com/essentialkaos/ek/v13/events"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //

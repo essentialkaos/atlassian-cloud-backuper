@@ -8,49 +8,33 @@ package app
 // ////////////////////////////////////////////////////////////////////////////////// //
 
 import (
-	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/essentialkaos/ek/v12/errutil"
-	"github.com/essentialkaos/ek/v12/events"
-	"github.com/essentialkaos/ek/v12/fmtc"
-	"github.com/essentialkaos/ek/v12/fmtutil"
-	"github.com/essentialkaos/ek/v12/fsutil"
-	"github.com/essentialkaos/ek/v12/knf"
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/options"
-	"github.com/essentialkaos/ek/v12/path"
-	"github.com/essentialkaos/ek/v12/req"
-	"github.com/essentialkaos/ek/v12/spinner"
-	"github.com/essentialkaos/ek/v12/support"
-	"github.com/essentialkaos/ek/v12/support/deps"
-	"github.com/essentialkaos/ek/v12/system/container"
-	"github.com/essentialkaos/ek/v12/terminal/tty"
-	"github.com/essentialkaos/ek/v12/timeutil"
-	"github.com/essentialkaos/ek/v12/tmp"
-	"github.com/essentialkaos/ek/v12/usage"
-	"github.com/essentialkaos/ek/v12/usage/completion/bash"
-	"github.com/essentialkaos/ek/v12/usage/completion/fish"
-	"github.com/essentialkaos/ek/v12/usage/completion/zsh"
-	"github.com/essentialkaos/ek/v12/usage/man"
-	"github.com/essentialkaos/ek/v12/usage/update"
+	"github.com/essentialkaos/ek/v13/errutil"
+	"github.com/essentialkaos/ek/v13/fmtc"
+	"github.com/essentialkaos/ek/v13/knf"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/options"
+	"github.com/essentialkaos/ek/v13/req"
+	"github.com/essentialkaos/ek/v13/support"
+	"github.com/essentialkaos/ek/v13/support/deps"
+	"github.com/essentialkaos/ek/v13/system/container"
+	"github.com/essentialkaos/ek/v13/terminal"
+	"github.com/essentialkaos/ek/v13/terminal/tty"
+	"github.com/essentialkaos/ek/v13/tmp"
+	"github.com/essentialkaos/ek/v13/usage"
+	"github.com/essentialkaos/ek/v13/usage/completion/bash"
+	"github.com/essentialkaos/ek/v13/usage/completion/fish"
+	"github.com/essentialkaos/ek/v13/usage/completion/zsh"
+	"github.com/essentialkaos/ek/v13/usage/man"
+	"github.com/essentialkaos/ek/v13/usage/update"
 
-	knfu "github.com/essentialkaos/ek/v12/knf/united"
-	knfv "github.com/essentialkaos/ek/v12/knf/validators"
-	knff "github.com/essentialkaos/ek/v12/knf/validators/fs"
-	knfn "github.com/essentialkaos/ek/v12/knf/validators/network"
-
-	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
-	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
-	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/jira"
-
-	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
-	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/fs"
-	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/s3"
-	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/sftp"
+	knfu "github.com/essentialkaos/ek/v13/knf/united"
+	knfv "github.com/essentialkaos/ek/v13/knf/validators"
+	knff "github.com/essentialkaos/ek/v13/knf/validators/fs"
+	knfn "github.com/essentialkaos/ek/v13/knf/validators/network"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -58,7 +42,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.0.3"
+	VER  = "0.1.0"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -68,6 +52,7 @@ const (
 const (
 	OPT_CONFIG      = "c:config"
 	OPT_INTERACTIVE = "I:interactive"
+	OPT_SERVER      = "S:server"
 	OPT_NO_COLOR    = "nc:no-color"
 	OPT_HELP        = "h:help"
 	OPT_VER         = "v:version"
@@ -81,7 +66,11 @@ const (
 	ACCESS_ACCOUNT                 = "access:account"
 	ACCESS_EMAIL                   = "access:email"
 	ACCESS_API_KEY                 = "access:api-key"
+	SERVER_IP                      = "server:ip"
+	SERVER_PORT                    = "server:port"
+	SERVER_ACCESS_TOKEN            = "server:access-token"
 	STORAGE_TYPE                   = "storage:type"
+	STORAGE_ENCRYPTION_KEY         = "storage:encryption-key"
 	STORAGE_FS_PATH                = "storage-fs:path"
 	STORAGE_FS_MODE                = "storage-fs:mode"
 	STORAGE_SFTP_HOST              = "storage-sftp:host"
@@ -109,9 +98,17 @@ const (
 	LOG_LEVEL                      = "log:level"
 )
 
+// ////////////////////////////////////////////////////////////////////////////////// //
+
 const (
 	TARGET_JIRA       = "jira"
 	TARGET_CONFLUENCE = "confluence"
+)
+
+const (
+	STORAGE_FS   = "fs"
+	STORAGE_SFTP = "sftp"
+	STORAGE_S3   = "s3"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -120,6 +117,7 @@ const (
 var optMap = options.Map{
 	OPT_CONFIG:      {Value: "/etc/atlassian-cloud-backuper.knf"},
 	OPT_INTERACTIVE: {Type: options.BOOL},
+	OPT_SERVER:      {Type: options.BOOL},
 	OPT_NO_COLOR:    {Type: options.BOOL},
 	OPT_HELP:        {Type: options.MIXED},
 	OPT_VER:         {Type: options.MIXED},
@@ -144,8 +142,9 @@ func Run(gitRev string, gomod []byte) {
 
 	args, errs := options.Parse(optMap)
 
-	if len(errs) != 0 {
-		printError(errs[0].Error())
+	if !errs.IsEmpty() {
+		terminal.Error("Options parsing errors:")
+		terminal.Error(errs.String())
 		os.Exit(1)
 	}
 
@@ -170,7 +169,8 @@ func Run(gitRev string, gomod []byte) {
 			WithChecks(getServiceStatus("Confluence")).
 			Print()
 		os.Exit(0)
-	case options.GetB(OPT_HELP) || len(args) == 0:
+	case options.GetB(OPT_HELP) ||
+		(!options.Has(OPT_SERVER) && len(args) == 0):
 		genUsage(options.GetS(OPT_HELP)).Print()
 		os.Exit(0)
 	}
@@ -179,18 +179,39 @@ func Run(gitRev string, gomod []byte) {
 		loadConfig,
 		validateConfig,
 		setupLogger,
-		setupTemp,
 	)
 
 	if err != nil {
-		printError(err.Error())
+		terminal.Error(err)
 		os.Exit(1)
 	}
 
 	log.Divider()
 	log.Aux("%s %s starting…", APP, VER)
 
-	if !process(args.Get(0).String()) {
+	err = errutil.Chain(
+		setupTemp,
+		setupReq,
+	)
+
+	if err != nil {
+		log.Crit(err.Error())
+		os.Exit(1)
+	}
+
+	if options.GetB(OPT_SERVER) {
+		err = startServer()
+	} else {
+		err = startApp(args)
+	}
+
+	if err != nil {
+		if options.GetB(OPT_INTERACTIVE) {
+			terminal.Error(err)
+		}
+
+		log.Crit(err.Error())
+
 		os.Exit(1)
 	}
 }
@@ -199,7 +220,7 @@ func Run(gitRev string, gomod []byte) {
 
 // preConfigureUI preconfigures UI based on information about user terminal
 func preConfigureUI() {
-	if !tty.IsTTY() {
+	if !tty.IsTTY() || tty.IsSystemd() || container.GetEngine() == container.YANDEX {
 		fmtc.DisableColors = true
 	}
 
@@ -222,7 +243,8 @@ func addExtraOptions(m options.Map) {
 
 	knfu.AddOptions(m,
 		ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
-		STORAGE_TYPE,
+		SERVER_IP, SERVER_PORT, SERVER_ACCESS_TOKEN,
+		STORAGE_TYPE, STORAGE_ENCRYPTION_KEY,
 		STORAGE_FS_PATH, STORAGE_FS_MODE,
 		STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 		STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
@@ -240,8 +262,6 @@ func configureUI() {
 	if options.GetB(OPT_NO_COLOR) {
 		fmtc.DisableColors = true
 	}
-
-	req.SetUserAgent("AtlassianCloudBackuper", VER)
 }
 
 // loadConfig loads configuration file
@@ -258,7 +278,8 @@ func loadConfig() error {
 		knfu.CombineSimple(
 			config,
 			ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
-			STORAGE_TYPE,
+			SERVER_IP, SERVER_PORT, SERVER_ACCESS_TOKEN,
+			STORAGE_TYPE, STORAGE_ENCRYPTION_KEY,
 			STORAGE_FS_PATH, STORAGE_FS_MODE,
 			STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 			STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
@@ -277,43 +298,56 @@ func loadConfig() error {
 // validateConfig validates configuration file values
 func validateConfig() error {
 	validators := []*knf.Validator{
-		{ACCESS_ACCOUNT, knfv.Empty, nil},
-		{ACCESS_EMAIL, knfv.Empty, nil},
-		{ACCESS_API_KEY, knfv.Empty, nil},
+		{ACCESS_ACCOUNT, knfv.Set, nil},
+		{ACCESS_EMAIL, knfv.Set, nil},
+		{ACCESS_API_KEY, knfv.Set, nil},
 		{ACCESS_EMAIL, knfn.Mail, nil},
-		{STORAGE_TYPE, knfv.NotContains, []string{
-			"fs", "sftp", "s3",
+		{STORAGE_TYPE, knfv.SetToAnyIgnoreCase, []string{
+			STORAGE_FS, STORAGE_SFTP, STORAGE_S3,
 		}},
-		{LOG_FORMAT, knfv.NotContains, []string{
+		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},
-		{LOG_LEVEL, knfv.NotContains, []string{
+		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, []string{
 			"", "debug", "info", "warn", "error", "crit",
 		}},
-		{TEMP_DIR, knff.Perms, "DW"},
+		{TEMP_DIR, knff.Perms, "DWX"},
 	}
 
-	switch knfu.GetS(STORAGE_TYPE) {
-	case "fs":
+	switch strings.ToLower(knfu.GetS(STORAGE_TYPE)) {
+	case STORAGE_FS:
 		validators = append(validators,
 			&knf.Validator{STORAGE_FS_PATH, knff.Perms, "DRW"},
 		)
 
-	case "sftp":
+	case STORAGE_SFTP:
 		validators = append(validators,
-			&knf.Validator{STORAGE_SFTP_HOST, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_USER, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_SFTP_PATH, knfv.Empty, nil},
+			&knf.Validator{STORAGE_SFTP_HOST, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_USER, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_SFTP_PATH, knfv.Set, nil},
 		)
 
-	case "s3":
+	case STORAGE_S3:
 		validators = append(validators,
-			&knf.Validator{STORAGE_S3_HOST, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_BUCKET, knfv.Empty, nil},
-			&knf.Validator{STORAGE_S3_PATH, knfv.Empty, nil},
+			&knf.Validator{STORAGE_S3_HOST, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
+		)
+	}
+
+	if options.GetB(OPT_SERVER) {
+		validators = append(validators,
+			&knf.Validator{SERVER_IP, knfn.IP, nil},
+			&knf.Validator{SERVER_PORT, knfn.Port, nil},
+		)
+	}
+
+	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" {
+		validators = append(validators,
+			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenGreater, 16},
+			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenLess, 96},
 		)
 	}
 
@@ -331,7 +365,7 @@ func setupLogger() error {
 	var err error
 
 	if knfu.GetS(LOG_FILE) != "" {
-		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 640))
+		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0640))
 
 		if err != nil {
 			return err
@@ -347,7 +381,7 @@ func setupLogger() error {
 	if knfu.GetS(LOG_FORMAT) == "" && container.IsContainer() {
 		log.Global.UseJSON = true
 	} else {
-		switch knfu.GetS(LOG_FORMAT) {
+		switch strings.ToLower(knfu.GetS(LOG_FORMAT)) {
 		case "json":
 			log.Global.UseJSON = true
 		case "text", "":
@@ -369,218 +403,10 @@ func setupTemp() error {
 	return err
 }
 
-// process starts backup creation
-func process(target string) bool {
-	var dispatcher *events.Dispatcher
-
-	if options.GetB(OPT_INTERACTIVE) {
-		dispatcher = events.NewDispatcher()
-		addEventsHandlers(dispatcher)
-	}
-
-	defer temp.Clean()
-
-	bkpr, err := getBackuper(target)
-
-	if err != nil {
-		log.Crit("Can't start backuping process: %v", err)
-		return false
-	}
-
-	bkpr.SetDispatcher(dispatcher)
-
-	outputFileName := getOutputFileName(target)
-	tmpFile := path.Join(temp.MkName(".zip"), outputFileName)
-
-	err = bkpr.Backup(tmpFile)
-
-	if err != nil {
-		spinner.Done(false)
-		log.Crit("Error while backuping process: %v", err)
-		return false
-	}
-
-	log.Info("Backup process successfully finished!")
-
-	updr, err := getUploader(target)
-
-	if err != nil {
-		log.Crit("Can't start uploading process: %v", err)
-		return false
-	}
-
-	updr.SetDispatcher(dispatcher)
-
-	err = updr.Upload(tmpFile, outputFileName)
-
-	if err != nil {
-		spinner.Done(false)
-		log.Crit("Error while uploading process: %v", err)
-		return false
-	}
-
-	return true
-}
-
-// getBackuper returns backuper instances
-func getBackuper(target string) (backuper.Backuper, error) {
-	var err error
-	var bkpr backuper.Backuper
-
-	bkpConfig, err := getBackuperConfig(target)
-
-	if err != nil {
-		return nil, err
-	}
-
-	switch target {
-	case TARGET_JIRA:
-		bkpr, err = jira.NewBackuper(bkpConfig)
-	case TARGET_CONFLUENCE:
-		bkpr, err = confluence.NewBackuper(bkpConfig)
-	}
-
-	return bkpr, nil
-}
-
-// getOutputFileName returns name for backup output file
-func getOutputFileName(target string) string {
-	var template string
-
-	switch target {
-	case TARGET_JIRA:
-		template = knfu.GetS(JIRA_OUTPUT_FILE, `jira-backup-%Y-%m-%d`) + ".zip"
-	case TARGET_CONFLUENCE:
-		template = knfu.GetS(JIRA_OUTPUT_FILE, `confluence-backup-%Y-%m-%d`) + ".zip"
-	}
-
-	return timeutil.Format(time.Now(), template)
-}
-
-// getBackuperConfig returns configuration for backuper
-func getBackuperConfig(target string) (*backuper.Config, error) {
-	switch target {
-	case TARGET_JIRA:
-		return &backuper.Config{
-			Account:         knfu.GetS(ACCESS_ACCOUNT),
-			Email:           knfu.GetS(ACCESS_EMAIL),
-			APIKey:          knfu.GetS(ACCESS_API_KEY),
-			WithAttachments: knfu.GetB(JIRA_INCLUDE_ATTACHMENTS),
-			ForCloud:        knfu.GetB(JIRA_CLOUD_FORMAT),
-		}, nil
-
-	case TARGET_CONFLUENCE:
-		return &backuper.Config{
-			Account:         knfu.GetS(ACCESS_ACCOUNT),
-			Email:           knfu.GetS(ACCESS_EMAIL),
-			APIKey:          knfu.GetS(ACCESS_API_KEY),
-			WithAttachments: knfu.GetB(CONFLUENCE_INCLUDE_ATTACHMENTS),
-			ForCloud:        knfu.GetB(CONFLUENCE_CLOUD_FORMAT),
-		}, nil
-	}
-
-	return nil, fmt.Errorf("Unknown target %q", target)
-}
-
-// getUploader returns uploader instance
-func getUploader(target string) (uploader.Uploader, error) {
-	var err error
-	var updr uploader.Uploader
-
-	switch knfu.GetS(STORAGE_TYPE) {
-	case "fs":
-		updr, err = fs.NewUploader(&fs.Config{
-			Path: path.Join(knfu.GetS(STORAGE_FS_PATH), target),
-			Mode: knfu.GetM(STORAGE_FS_MODE, 0600),
-		})
-
-	case "sftp":
-		keyData, err := readPrivateKeyData()
-
-		if err != nil {
-			return nil, err
-		}
-
-		updr, err = sftp.NewUploader(&sftp.Config{
-			Host: knfu.GetS(STORAGE_SFTP_HOST),
-			User: knfu.GetS(STORAGE_SFTP_USER),
-			Key:  keyData,
-			Path: path.Join(knfu.GetS(STORAGE_SFTP_PATH), target),
-			Mode: knfu.GetM(STORAGE_SFTP_MODE, 0600),
-		})
-
-	case "s3":
-		updr, err = s3.NewUploader(&s3.Config{
-			Host:        knfu.GetS(STORAGE_S3_HOST),
-			Region:      knfu.GetS(STORAGE_S3_REGION),
-			AccessKeyID: knfu.GetS(STORAGE_S3_ACCESS_KEY),
-			SecretKey:   knfu.GetS(STORAGE_S3_SECRET_KEY),
-			Bucket:      knfu.GetS(STORAGE_S3_BUCKET),
-			Path:        path.Join(knfu.GetS(STORAGE_S3_PATH), target),
-		})
-	}
-
-	return updr, err
-}
-
-// readPrivateKeyData reads private key data
-func readPrivateKeyData() ([]byte, error) {
-	if fsutil.IsExist(knfu.GetS(STORAGE_SFTP_KEY)) {
-		return os.ReadFile(knfu.GetS(STORAGE_SFTP_KEY))
-	}
-
-	return base64.StdEncoding.DecodeString(knfu.GetS(STORAGE_SFTP_KEY))
-}
-
-// addEventsHandlers registers events handlers
-func addEventsHandlers(dispatcher *events.Dispatcher) {
-	dispatcher.AddHandler(backuper.EVENT_BACKUP_STARTED, func(payload any) {
-		fmtc.NewLine()
-		spinner.Show("Starting downloading process")
-	})
-
-	dispatcher.AddHandler(backuper.EVENT_BACKUP_PROGRESS, func(payload any) {
-		p := payload.(*backuper.ProgressInfo)
-		spinner.Update("[%d%%] %s", p.Progress, p.Message)
-	})
-
-	dispatcher.AddHandler(backuper.EVENT_BACKUP_SAVING, func(payload any) {
-		spinner.Done(true)
-		spinner.Show("Fetching backup file")
-	})
-
-	dispatcher.AddHandler(backuper.EVENT_BACKUP_DONE, func(payload any) {
-		spinner.Done(true)
-	})
-
-	dispatcher.AddHandler(uploader.EVENT_UPLOAD_STARTED, func(payload any) {
-		spinner.Show("Uploading backup file to %s storage", payload)
-	})
-
-	dispatcher.AddHandler(uploader.EVENT_UPLOAD_PROGRESS, func(payload any) {
-		p := payload.(*uploader.ProgressInfo)
-		spinner.Update(
-			"[%s] Uploading file (%s/%s)",
-			fmtutil.PrettyPerc(p.Progress),
-			fmtutil.PrettySize(p.Current),
-			fmtutil.PrettySize(p.Total),
-		)
-	})
-
-	dispatcher.AddHandler(uploader.EVENT_UPLOAD_DONE, func(payload any) {
-		spinner.Update("Uploading file")
-		spinner.Done(true)
-		fmtc.NewLine()
-	})
-}
-
-// printError prints error message to console
-func printError(f string, a ...interface{}) {
-	if len(a) == 0 {
-		fmtc.Fprintln(os.Stderr, "{r}"+f+"{!}")
-	} else {
-		fmtc.Fprintf(os.Stderr, "{r}"+f+"{!}\n", a...)
-	}
+// setupReq configures HTTP request engine
+func setupReq() error {
+	req.SetUserAgent("AtlassianCloudBackuper", VER)
+	return nil
 }
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -671,6 +497,7 @@ func genUsage(section string) *usage.Info {
 
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
 	info.AddOption(OPT_INTERACTIVE, "Interactive mode")
+	info.AddOption(OPT_SERVER, "Server mode")
 	info.AddOption(OPT_NO_COLOR, "Disable colors in output")
 	info.AddOption(OPT_HELP, "Show this help message")
 	info.AddOption(OPT_VER, "Show version")
@@ -679,7 +506,11 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, ACCESS_ACCOUNT, "Account name", "name")
 		addUnitedOption(info, ACCESS_EMAIL, "User email with access to API", "email")
 		addUnitedOption(info, ACCESS_API_KEY, "API key", "key")
+		addUnitedOption(info, SERVER_IP, "HTTP server IP", "ip")
+		addUnitedOption(info, SERVER_PORT, "HTTP server port", "port")
+		addUnitedOption(info, SERVER_ACCESS_TOKEN, "HTTP access token", "token")
 		addUnitedOption(info, STORAGE_TYPE, "Storage type", "fs/sftp/s3")
+		addUnitedOption(info, STORAGE_ENCRYPTION_KEY, "Data encryption key", "key")
 		addUnitedOption(info, STORAGE_FS_PATH, "Path on system for backups", "path")
 		addUnitedOption(info, STORAGE_FS_MODE, "File mode on system", "mode")
 		addUnitedOption(info, STORAGE_SFTP_HOST, "SFTP host", "host")

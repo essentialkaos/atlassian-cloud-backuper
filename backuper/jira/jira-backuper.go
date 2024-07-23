@@ -14,11 +14,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/essentialkaos/ek/v12/events"
-	"github.com/essentialkaos/ek/v12/fmtutil"
-	"github.com/essentialkaos/ek/v12/fsutil"
-	"github.com/essentialkaos/ek/v12/log"
-	"github.com/essentialkaos/ek/v12/req"
+	"github.com/essentialkaos/ek/v13/events"
+	"github.com/essentialkaos/ek/v13/fmtutil"
+	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/req"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 )
@@ -104,7 +104,7 @@ func (b *JiraBackuper) Start() (string, error) {
 	if backupTaskID != "" {
 		log.Info("Found previously created backup task with ID %s", backupTaskID)
 	} else {
-		log.Info("No previously created task found, run backup…")
+		log.Info("No previously created task found, starting new backup…")
 
 		backupTaskID, err = b.startBackup()
 
