@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.0.4
+Version:        0.1.0
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -113,7 +113,10 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
-* Fri Jul 19 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.4-0
+* Tue Jul 23 2024 Anton Novojilov <andy@essentialkaos.com> - 0.1.0-0
+- Added data encryption feature
+- Added server mode
+- Code refactoring
 - Dependencies update
 
 * Wed Jun 12 2024 Anton Novojilov <andy@essentialkaos.com> - 0.0.3-0

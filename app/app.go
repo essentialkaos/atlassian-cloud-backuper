@@ -238,8 +238,8 @@ func addExtraOptions(m options.Map) {
 
 	knfu.AddOptions(m,
 		ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
-		SERVER_IP, SERVER_PORT,
-		STORAGE_TYPE,
+		SERVER_IP, SERVER_PORT, SERVER_ACCESS_TOKEN,
+		STORAGE_TYPE, STORAGE_ENCRYPTION_KEY,
 		STORAGE_FS_PATH, STORAGE_FS_MODE,
 		STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 		STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
@@ -273,8 +273,8 @@ func loadConfig() error {
 		knfu.CombineSimple(
 			config,
 			ACCESS_ACCOUNT, ACCESS_EMAIL, ACCESS_API_KEY,
-			SERVER_IP, SERVER_PORT,
-			STORAGE_TYPE,
+			SERVER_IP, SERVER_PORT, SERVER_ACCESS_TOKEN,
+			STORAGE_TYPE, STORAGE_ENCRYPTION_KEY,
 			STORAGE_FS_PATH, STORAGE_FS_MODE,
 			STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 			STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
@@ -505,6 +505,7 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, SERVER_PORT, "HTTP server port", "port")
 		addUnitedOption(info, SERVER_ACCESS_TOKEN, "HTTP access token", "token")
 		addUnitedOption(info, STORAGE_TYPE, "Storage type", "fs/sftp/s3")
+		addUnitedOption(info, STORAGE_ENCRYPTION_KEY, "Data encryption key", "key")
 		addUnitedOption(info, STORAGE_FS_PATH, "Path on system for backups", "path")
 		addUnitedOption(info, STORAGE_FS_MODE, "File mode on system", "mode")
 		addUnitedOption(info, STORAGE_SFTP_HOST, "SFTP host", "host")

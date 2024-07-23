@@ -17,10 +17,16 @@
   # HTTP server port
   port: 8080
 
+  # Unique token for requests
+  access-token:
+
 [storage]
 
   # Storage type (fs/sftp/s3)
   type:
+
+  # Katana encryption key
+  encryption-key:
 
 [storage-fs]
 
