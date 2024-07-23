@@ -70,6 +70,7 @@ const (
 	SERVER_PORT                    = "server:port"
 	SERVER_ACCESS_TOKEN            = "server:access-token"
 	STORAGE_TYPE                   = "storage:type"
+	STORAGE_ENCRYPTION_KEY         = "storage:encryption-key"
 	STORAGE_FS_PATH                = "storage-fs:path"
 	STORAGE_FS_MODE                = "storage-fs:mode"
 	STORAGE_SFTP_HOST              = "storage-sftp:host"
@@ -335,6 +336,13 @@ func validateConfig() error {
 		validators = append(validators,
 			&knf.Validator{SERVER_IP, knfn.IP, nil},
 			&knf.Validator{SERVER_PORT, knfn.Port, nil},
+		)
+	}
+
+	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" {
+		validators = append(validators,
+			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenGreater, 16},
+			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenLess, 96},
 		)
 	}
 

@@ -104,7 +104,7 @@ func (b *JiraBackuper) Start() (string, error) {
 	if backupTaskID != "" {
 		log.Info("Found previously created backup task with ID %s", backupTaskID)
 	} else {
-		log.Info("No previously created task found, run backup…")
+		log.Info("No previously created task found, starting new backup…")
 
 		backupTaskID, err = b.startBackup()
 

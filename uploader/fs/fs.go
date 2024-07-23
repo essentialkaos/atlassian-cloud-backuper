@@ -12,11 +12,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/essentialkaos/ek/v13/events"
 	"github.com/essentialkaos/ek/v13/fsutil"
 	"github.com/essentialkaos/ek/v13/log"
+	"github.com/essentialkaos/ek/v13/passthru"
 	"github.com/essentialkaos/ek/v13/path"
+
+	"github.com/essentialkaos/katana"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 )
@@ -25,8 +29,9 @@ import (
 
 // Config is configuration for FS uploader
 type Config struct {
-	Path string
-	Mode os.FileMode
+	Path   string
+	Mode   os.FileMode
+	Secret *katana.Secret
 }
 
 // FSUploader is FS uploader instance
@@ -64,10 +69,6 @@ func (u *FSUploader) SetDispatcher(d *events.Dispatcher) {
 
 // Upload uploads given file to storage
 func (u *FSUploader) Upload(file, fileName string) error {
-	log.Info("Copying backup file to %s…", u.config.Path)
-
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "FS")
-
 	err := fsutil.ValidatePerms("FRS", file)
 
 	if err != nil {
@@ -78,43 +79,89 @@ func (u *FSUploader) Upload(file, fileName string) error {
 		err = os.MkdirAll(u.config.Path, 0750)
 
 		if err != nil {
-			return fmt.Errorf("Can't create directory for backup: %v", err)
+			return fmt.Errorf("Can't create directory for backup: %w", err)
 		}
 	}
 
-	err = fsutil.CopyFile(file, path.Join(u.config.Path, fileName), u.config.Mode)
+	fd, err := os.Open(file)
 
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "FS")
+	if err != nil {
+		return fmt.Errorf("Can't open backup file: %w", err)
+	}
 
-	log.Info("Backup successfully copied to %s", u.config.Path)
+	defer fd.Close()
+
+	err = u.Write(fd, fileName, fsutil.GetSize(file))
+
+	if err != nil {
+		return fmt.Errorf("Can't save backup file: %w", err)
+	}
 
 	return err
 }
 
 // Write writes data from given reader to given file
-func (u *FSUploader) Write(r io.ReadCloser, fileName string) error {
+func (u *FSUploader) Write(r io.ReadCloser, fileName string, fileSize int64) error {
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "FS")
 
-	fd, err := os.OpenFile(
-		path.Join(u.config.Path, fileName),
-		os.O_CREATE|os.O_TRUNC|os.O_WRONLY, u.config.Mode,
-	)
+	var w io.Writer
+
+	lastUpdate := time.Now()
+	outputFile := path.Join(u.config.Path, fileName)
+
+	log.Info("Copying backup file to %s…", u.config.Path)
+
+	fd, err := os.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, u.config.Mode)
 
 	if err != nil {
 		return err
 	}
 
-	defer fd.Close()
-	defer r.Close()
+	w = fd
 
-	w := bufio.NewWriter(fd)
-	_, err = io.Copy(w, r)
+	if u.config.Secret != nil {
+		sw, err := u.config.Secret.NewWriter(fd)
+
+		if err != nil {
+			return fmt.Errorf("Can't create encrypted writer: %w", err)
+		}
+
+		defer sw.Close()
+
+		w = sw
+	}
+
+	if fileSize > 0 {
+		pw := passthru.NewWriter(w, fileSize)
+
+		pw.Update = func(n int) {
+			if time.Since(lastUpdate) < 3*time.Second {
+				return
+			}
+
+			u.dispatcher.Dispatch(
+				uploader.EVENT_UPLOAD_PROGRESS,
+				&uploader.ProgressInfo{
+					Progress: pw.Progress(),
+					Current:  pw.Current(),
+					Total:    pw.Total(),
+				},
+			)
+
+			lastUpdate = time.Now()
+		}
+
+		w = pw
+	}
+
+	_, err = io.Copy(bufio.NewWriter(w), r)
 
 	if err != nil {
 		return fmt.Errorf("File writing error: %w", err)
 	}
 
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "FS")
+	log.Info("Backup successfully copied to %s", u.config.Path)
 
 	return nil
 }

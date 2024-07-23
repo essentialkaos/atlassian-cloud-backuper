@@ -150,7 +150,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 
 	log.Info("Uploading backup to storage", lf)
 
-	err = updr.Write(br, outputFile)
+	err = updr.Write(br, outputFile, 0)
 
 	if err != nil {
 		log.Error("Can't upload backup file: %v", err, lf)

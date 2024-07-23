@@ -98,8 +98,17 @@ func (b *ConfluenceBackuper) Start() (string, error) {
 	info, _ := b.getBackupProgress()
 
 	if info != nil && !info.IsOutdated {
-		log.Info("Found previously created backup task")
+		log.Info(
+			"Found previously created backup task",
+			log.F{"backup-status", info.CurrentStatus},
+			log.F{"backup-perc", info.AlternativePercentage},
+			log.F{"backup-size", info.Size},
+			log.F{"backup-file", info.Filename},
+			log.F{"backup-outdated", info.IsOutdated},
+		)
 	} else {
+		log.Info("No previously created backup task or task is outdated, starting new backup…")
+
 		err := b.startBackup()
 
 		if err != nil {
@@ -142,14 +151,14 @@ func (b *ConfluenceBackuper) Progress(taskID string) (string, error) {
 
 		if progressInfo.Size == 0 && progressInfo.AlternativePercentage >= lastProgress {
 			log.Info(
-				"(%s) Backup in progress: %s",
+				"(%s%%) Backup in progress: %s",
 				progressInfo.AlternativePercentage,
 				progressInfo.CurrentStatus,
 			)
 			lastProgress = progressInfo.AlternativePercentage
 		}
 
-		if progressInfo.Size != 0 && progressInfo.Filename != "" {
+		if progressInfo.Filename != "" {
 			backupFileURL = progressInfo.Filename
 			break
 		}

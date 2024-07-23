@@ -14,14 +14,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/sftp"
-	"golang.org/x/crypto/ssh"
-
 	"github.com/essentialkaos/ek/v13/events"
 	"github.com/essentialkaos/ek/v13/fsutil"
 	"github.com/essentialkaos/ek/v13/log"
 	"github.com/essentialkaos/ek/v13/passthru"
 	"github.com/essentialkaos/ek/v13/path"
+
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+
+	"github.com/essentialkaos/katana"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 )
@@ -30,11 +32,12 @@ import (
 
 // Config is configuration for SFTP uploader
 type Config struct {
-	Host string
-	User string
-	Key  []byte
-	Path string
-	Mode os.FileMode
+	Host   string
+	User   string
+	Key    []byte
+	Path   string
+	Mode   os.FileMode
+	Secret *katana.Secret
 }
 
 // SFTPUploader is SFTP uploader instance
@@ -72,88 +75,30 @@ func (u *SFTPUploader) SetDispatcher(d *events.Dispatcher) {
 
 // Upload uploads given file to SFTP storage
 func (u *SFTPUploader) Upload(file, fileName string) error {
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "SFTP")
-
-	lastUpdate := time.Now()
-	fileSize := fsutil.GetSize(file)
-	outputFile := path.Join(u.config.Path, fileName)
-
-	log.Info(
-		"Uploading backup file to %s@%s~%s/%s…",
-		u.config.User, u.config.Host, u.config.Path, fileName,
-	)
-
-	sftpClient, err := u.connectToSFTP()
-
-	if err != nil {
-		return fmt.Errorf("Can't connect to SFTP: %v", err)
-	}
-
-	defer sftpClient.Close()
-
-	_, err = sftpClient.Stat(u.config.Path)
-
-	if err != nil {
-		err = sftpClient.MkdirAll(u.config.Path)
-
-		if err != nil {
-			return fmt.Errorf("Can't create directory for backup: %v", err)
-		}
-	}
-
-	outputFD, err := sftpClient.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
-
-	if err != nil {
-		return fmt.Errorf("Can't create file of SFTP: %v", err)
-	}
-
-	defer outputFD.Close()
-
-	inputFD, err := os.OpenFile(file, os.O_RDONLY, 0)
+	fd, err := os.Open(file)
 
 	if err != nil {
 		return fmt.Errorf("Can't open backup file for reading: %v", err)
 	}
 
-	defer inputFD.Close()
+	defer fd.Close()
 
-	w := passthru.NewWriter(outputFD, fileSize)
-
-	w.Update = func(n int) {
-		if time.Since(lastUpdate) < 3*time.Second {
-			return
-		}
-
-		u.dispatcher.Dispatch(
-			uploader.EVENT_UPLOAD_PROGRESS,
-			&uploader.ProgressInfo{Progress: w.Progress(), Current: w.Current(), Total: w.Total()},
-		)
-
-		lastUpdate = time.Now()
-	}
-
-	_, err = io.Copy(w, inputFD)
+	err = u.Write(fd, fileName, fsutil.GetSize(file))
 
 	if err != nil {
-		return fmt.Errorf("Can't upload file to SFTP: %v", err)
+		return fmt.Errorf("Can't save backup: %w", err)
 	}
-
-	err = sftpClient.Chmod(outputFile, u.config.Mode)
-
-	if err != nil {
-		log.Error("Can't change file mode for uploaded file: %v", err)
-	}
-
-	log.Info("File successfully uploaded to SFTP!")
-	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_DONE, "SFTP")
 
 	return nil
 }
 
 // Write writes data from given reader to given file
-func (u *SFTPUploader) Write(r io.ReadCloser, fileName string) error {
+func (u *SFTPUploader) Write(r io.ReadCloser, fileName string, fileSize int64) error {
 	u.dispatcher.DispatchAndWait(uploader.EVENT_UPLOAD_STARTED, "SFTP")
 
+	var w io.Writer
+
+	lastUpdate := time.Now()
 	outputFile := path.Join(u.config.Path, fileName)
 
 	log.Info(
@@ -179,16 +124,50 @@ func (u *SFTPUploader) Write(r io.ReadCloser, fileName string) error {
 		}
 	}
 
-	outputFD, err := sftpClient.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
+	fd, err := sftpClient.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY)
 
 	if err != nil {
 		return fmt.Errorf("Can't create file of SFTP: %v", err)
 	}
 
-	defer outputFD.Close()
-	defer r.Close()
+	w = fd
 
-	_, err = io.Copy(outputFD, r)
+	if u.config.Secret != nil {
+		sw, err := u.config.Secret.NewWriter(fd)
+
+		if err != nil {
+			return fmt.Errorf("Can't create encrypted writer: %w", err)
+		}
+
+		defer sw.Close()
+
+		w = sw
+	}
+
+	if fileSize > 0 {
+		pw := passthru.NewWriter(w, fileSize)
+
+		pw.Update = func(n int) {
+			if time.Since(lastUpdate) < 3*time.Second {
+				return
+			}
+
+			u.dispatcher.Dispatch(
+				uploader.EVENT_UPLOAD_PROGRESS,
+				&uploader.ProgressInfo{
+					Progress: pw.Progress(),
+					Current:  pw.Current(),
+					Total:    pw.Total(),
+				},
+			)
+
+			lastUpdate = time.Now()
+		}
+
+		w = pw
+	}
+
+	_, err = io.Copy(w, r)
 
 	if err != nil {
 		return fmt.Errorf("Can't upload file to SFTP: %v", err)

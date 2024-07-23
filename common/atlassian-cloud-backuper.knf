@@ -25,6 +25,9 @@
   # Storage type (fs/sftp/s3)
   type:
 
+  # Katana encryption key
+  encryption-key:
+
 [storage-fs]
 
   # Path to directory with backups
