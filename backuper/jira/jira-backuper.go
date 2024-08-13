@@ -75,8 +75,8 @@ func (b *JiraBackuper) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Backup starts backup process
-func (b *JiraBackuper) Backup(outputFile string) error {
-	backupTaskID, err := b.Start()
+func (b *JiraBackuper) Backup(outputFile string, force bool) error {
+	backupTaskID, err := b.Start(force)
 
 	if err != nil {
 		return err
@@ -92,20 +92,25 @@ func (b *JiraBackuper) Backup(outputFile string) error {
 }
 
 // Start creates task for backuping data
-func (b *JiraBackuper) Start() (string, error) {
+func (b *JiraBackuper) Start(force bool) (string, error) {
 	var err error
 	var backupTaskID string
 
 	log.Info("Starting Jira backup process for account %s…", b.config.Account)
-	log.Info("Checking for existing backup task…")
 
-	backupTaskID, _ = b.getLastTaskID()
+	if !force {
+		log.Info("Checking for existing backup task…")
 
-	if backupTaskID != "" {
-		log.Info("Found previously created backup task with ID %s", backupTaskID)
+		backupTaskID, _ = b.getLastTaskID()
+
+		if backupTaskID == "" {
+			log.Info("No previously created task found, starting new backup…")
+		}
 	} else {
-		log.Info("No previously created task found, starting new backup…")
+		log.Info("Starting new backup…")
+	}
 
+	if backupTaskID == "" {
 		backupTaskID, err = b.startBackup()
 
 		if err != nil {

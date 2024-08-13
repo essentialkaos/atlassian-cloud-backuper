@@ -28,13 +28,13 @@ const (
 // Backuper is generic backuper interface
 type Backuper interface {
 	// Backup runs backup process
-	Backup(outputFile string) error
+	Backup(outputFile string, force bool) error
 
 	// SetDispatcher sets events dispatcher
 	SetDispatcher(d *events.Dispatcher)
 
 	// Start creates task for backuping data
-	Start() (string, error)
+	Start(force bool) (string, error)
 
 	// Progress monitors backup creation progress
 	Progress(taskID string) (string, error)

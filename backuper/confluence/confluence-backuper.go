@@ -74,8 +74,8 @@ func (b *ConfluenceBackuper) SetDispatcher(d *events.Dispatcher) {
 }
 
 // Backup starts backup process
-func (b *ConfluenceBackuper) Backup(outputFile string) error {
-	_, err := b.Start()
+func (b *ConfluenceBackuper) Backup(outputFile string, force bool) error {
+	_, err := b.Start(force)
 
 	if err != nil {
 		return err
@@ -91,13 +91,13 @@ func (b *ConfluenceBackuper) Backup(outputFile string) error {
 }
 
 // Start creates task for backuping data
-func (b *ConfluenceBackuper) Start() (string, error) {
+func (b *ConfluenceBackuper) Start(force bool) (string, error) {
 	log.Info("Starting Confluence backup process for account %s…", b.config.Account)
 	log.Info("Checking for existing backup task…")
 
 	info, _ := b.getBackupProgress()
 
-	if info != nil && !info.IsOutdated {
+	if !force && info != nil && !info.IsOutdated {
 		log.Info(
 			"Found previously created backup task",
 			log.F{"backup-status", info.CurrentStatus},
@@ -107,7 +107,11 @@ func (b *ConfluenceBackuper) Start() (string, error) {
 			log.F{"backup-outdated", info.IsOutdated},
 		)
 	} else {
-		log.Info("No previously created backup task or task is outdated, starting new backup…")
+		if force {
+			log.Info("Starting new backup…")
+		} else {
+			log.Info("No previously created backup task or task is outdated, starting new backup…")
+		}
 
 		err := b.startBackup()
 

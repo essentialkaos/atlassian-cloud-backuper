@@ -58,6 +58,7 @@ func createBackupHandler(rw http.ResponseWriter, r *http.Request) {
 
 	target := strings.ToLower(r.URL.Query().Get("target"))
 	token := r.URL.Query().Get("token")
+	force := r.URL.Query().Get("force") != ""
 
 	err := validateRequestQuery(target, token)
 
@@ -75,7 +76,7 @@ func createBackupHandler(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	taskID, err := bkpr.Start()
+	taskID, err := bkpr.Start(force)
 
 	if err != nil {
 		log.Error("Can't create backup: %v", err)

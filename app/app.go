@@ -42,7 +42,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.1.0"
+	VER  = "0.2.0"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -53,6 +53,7 @@ const (
 	OPT_CONFIG      = "c:config"
 	OPT_INTERACTIVE = "I:interactive"
 	OPT_SERVER      = "S:server"
+	OPT_FORCE       = "F:force"
 	OPT_NO_COLOR    = "nc:no-color"
 	OPT_HELP        = "h:help"
 	OPT_VER         = "v:version"
@@ -498,6 +499,7 @@ func genUsage(section string) *usage.Info {
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
 	info.AddOption(OPT_INTERACTIVE, "Interactive mode")
 	info.AddOption(OPT_SERVER, "Server mode")
+	info.AddOption(OPT_FORCE, "Force backup generation")
 	info.AddOption(OPT_NO_COLOR, "Disable colors in output")
 	info.AddOption(OPT_HELP, "Show this help message")
 	info.AddOption(OPT_VER, "Show version")
