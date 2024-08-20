@@ -43,7 +43,6 @@ type Config struct {
 	SecretKey   string
 	Bucket      string
 	Path        string
-	Threads     int
 	PartSize    int64
 }
 
@@ -160,7 +159,6 @@ func (u *S3Uploader) Write(r io.ReadCloser, fileName string, fileSize int64) err
 	})
 
 	manager := manager.NewUploader(client, func(c *manager.Uploader) {
-		c.Concurrency = u.config.Threads
 		c.PartSize = u.config.PartSize * 1024 * 1024
 	})
 
