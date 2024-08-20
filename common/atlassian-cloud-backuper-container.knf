@@ -73,9 +73,6 @@
   # Path to directory with backups
   path:
 
-  # Uploading threads (default: 3)
-  threads: 3
-
   # Part size in MB (default: 32)
   part-size: 32
 
