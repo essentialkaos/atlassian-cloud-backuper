@@ -73,6 +73,12 @@
   # Path to directory with backups
   path:
 
+  # Uploading threads (default: 3)
+  threads: 3
+
+  # Part size in MB (default: 32)
+  part-size: 32
+
 [jira]
   
   # Backup file name with date tags (default: jira-backup-%Y-%m-%d.zip)

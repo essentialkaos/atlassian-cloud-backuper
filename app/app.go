@@ -85,6 +85,8 @@ const (
 	STORAGE_S3_SECRET_KEY          = "storage-s3:secret-key"
 	STORAGE_S3_BUCKET              = "storage-s3:bucket"
 	STORAGE_S3_PATH                = "storage-s3:path"
+	STORAGE_S3_THREADS             = "storage-s3:threads"
+	STORAGE_S3_PART_SIZE           = "storage-s3:part-size"
 	JIRA_OUTPUT_FILE               = "jira:output-file"
 	JIRA_INCLUDE_ATTACHMENTS       = "jira:include-attachments"
 	JIRA_CLOUD_FORMAT              = "jira:cloud-format"
@@ -250,7 +252,7 @@ func addExtraOptions(m options.Map) {
 		STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 		STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
 		STORAGE_S3_HOST, STORAGE_S3_ACCESS_KEY, STORAGE_S3_SECRET_KEY,
-		STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+		STORAGE_S3_BUCKET, STORAGE_S3_PATH, STORAGE_S3_PART_SIZE, STORAGE_S3_THREADS,
 		JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 		CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
 		TEMP_DIR,
@@ -286,6 +288,7 @@ func loadConfig() error {
 			STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
 			STORAGE_S3_HOST, STORAGE_S3_REGION, STORAGE_S3_ACCESS_KEY,
 			STORAGE_S3_SECRET_KEY, STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+			STORAGE_S3_PART_SIZE, STORAGE_S3_THREADS,
 			JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 			CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
 			TEMP_DIR,
@@ -335,6 +338,10 @@ func validateConfig() error {
 			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Greater, 5},
+			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Less, 5_000},
+			&knf.Validator{STORAGE_S3_THREADS, knfv.Greater, 1},
+			&knf.Validator{STORAGE_S3_THREADS, knfv.Less, 96},
 		)
 	}
 
@@ -526,6 +533,8 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, STORAGE_S3_SECRET_KEY, "S3 access secret key", "key")
 		addUnitedOption(info, STORAGE_S3_BUCKET, "S3 bucket", "name")
 		addUnitedOption(info, STORAGE_S3_PATH, "Path for backups", "path")
+		addUnitedOption(info, STORAGE_S3_THREADS, "Uploading threads", "num")
+		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size (in MB)", "num")
 		addUnitedOption(info, JIRA_OUTPUT_FILE, "Jira backup output file name template", "template")
 		addUnitedOption(info, JIRA_INCLUDE_ATTACHMENTS, "Include attachments to Jira backup", "yes/no")
 		addUnitedOption(info, JIRA_CLOUD_FORMAT, "Create Jira backup for Cloud", "yes/no")

@@ -29,9 +29,9 @@ import (
 
 // Config is configuration for FS uploader
 type Config struct {
+	Secret *katana.Secret
 	Path   string
 	Mode   os.FileMode
-	Secret *katana.Secret
 }
 
 // FSUploader is FS uploader instance

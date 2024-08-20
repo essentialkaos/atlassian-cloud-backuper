@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.1.0
+Version:        0.2.0
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -115,6 +115,7 @@ rm -rf %{buildroot}
 %changelog
 * Tue Jul 23 2024 Anton Novojilov <andy@essentialkaos.com> - 0.1.0-0
 - Added data encryption feature
+- Added multipart uploading to S3 storage
 - Added server mode
 - Code refactoring
 - Dependencies update

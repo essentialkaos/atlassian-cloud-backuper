@@ -104,9 +104,9 @@ func getUploader(target string) (uploader.Uploader, error) {
 	switch strings.ToLower(knfu.GetS(STORAGE_TYPE)) {
 	case STORAGE_FS:
 		return fs.NewUploader(&fs.Config{
+			Secret: secret,
 			Path:   path.Join(knfu.GetS(STORAGE_FS_PATH), target),
 			Mode:   knfu.GetM(STORAGE_FS_MODE, 0600),
-			Secret: secret,
 		})
 
 	case STORAGE_SFTP:
@@ -117,23 +117,25 @@ func getUploader(target string) (uploader.Uploader, error) {
 		}
 
 		return sftp.NewUploader(&sftp.Config{
+			Secret: secret,
 			Host:   knfu.GetS(STORAGE_SFTP_HOST),
 			User:   knfu.GetS(STORAGE_SFTP_USER),
 			Key:    keyData,
 			Path:   path.Join(knfu.GetS(STORAGE_SFTP_PATH), target),
 			Mode:   knfu.GetM(STORAGE_SFTP_MODE, 0600),
-			Secret: secret,
 		})
 
 	case STORAGE_S3:
 		return s3.NewUploader(&s3.Config{
+			Secret:      secret,
 			Host:        knfu.GetS(STORAGE_S3_HOST),
 			Region:      knfu.GetS(STORAGE_S3_REGION),
 			AccessKeyID: knfu.GetS(STORAGE_S3_ACCESS_KEY),
 			SecretKey:   knfu.GetS(STORAGE_S3_SECRET_KEY),
 			Bucket:      knfu.GetS(STORAGE_S3_BUCKET),
 			Path:        path.Join(knfu.GetS(STORAGE_S3_PATH), target),
-			Secret:      secret,
+			Threads:     knfu.GetI(STORAGE_S3_THREADS, 3),
+			PartSize:    knfu.GetI64(STORAGE_S3_PART_SIZE, 32),
 		})
 	}
 
