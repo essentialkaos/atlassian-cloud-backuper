@@ -118,6 +118,7 @@ const (
 // optMap contains information about all supported options
 var optMap = options.Map{
 	OPT_CONFIG:      {Value: "/etc/atlassian-cloud-backuper.knf"},
+	OPT_FORCE:       {Type: options.BOOL},
 	OPT_INTERACTIVE: {Type: options.BOOL},
 	OPT_SERVER:      {Type: options.BOOL},
 	OPT_NO_COLOR:    {Type: options.BOOL},
