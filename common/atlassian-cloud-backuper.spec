@@ -113,8 +113,13 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
-* Tue Jul 23 2024 Anton Novojilov <andy@essentialkaos.com> - 0.1.0-0
+* Thu Sep 05 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.0-0
 - Added option (-F/--force) and query param (force) to force backup creation
+- Added multipart uploading to S3 storage
+- Code refactoring
+- Dependencies update
+
+* Tue Jul 23 2024 Anton Novojilov <andy@essentialkaos.com> - 0.1.0-0
 - Added data encryption feature
 - Added multipart uploading to S3 storage
 - Added server mode
