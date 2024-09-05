@@ -73,7 +73,7 @@ func startApp(args options.Arguments) error {
 
 	tmpFile := path.Join(tmpDir, outputFileName)
 
-	err = bkpr.Backup(tmpFile)
+	err = bkpr.Backup(tmpFile, options.GetB(OPT_FORCE))
 
 	if err != nil {
 		spinner.Done(false)

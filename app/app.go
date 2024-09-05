@@ -42,7 +42,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.1.0"
+	VER  = "0.2.0"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -53,6 +53,7 @@ const (
 	OPT_CONFIG      = "c:config"
 	OPT_INTERACTIVE = "I:interactive"
 	OPT_SERVER      = "S:server"
+	OPT_FORCE       = "F:force"
 	OPT_NO_COLOR    = "nc:no-color"
 	OPT_HELP        = "h:help"
 	OPT_VER         = "v:version"
@@ -84,6 +85,7 @@ const (
 	STORAGE_S3_SECRET_KEY          = "storage-s3:secret-key"
 	STORAGE_S3_BUCKET              = "storage-s3:bucket"
 	STORAGE_S3_PATH                = "storage-s3:path"
+	STORAGE_S3_PART_SIZE           = "storage-s3:part-size"
 	JIRA_OUTPUT_FILE               = "jira:output-file"
 	JIRA_INCLUDE_ATTACHMENTS       = "jira:include-attachments"
 	JIRA_CLOUD_FORMAT              = "jira:cloud-format"
@@ -116,6 +118,7 @@ const (
 // optMap contains information about all supported options
 var optMap = options.Map{
 	OPT_CONFIG:      {Value: "/etc/atlassian-cloud-backuper.knf"},
+	OPT_FORCE:       {Type: options.BOOL},
 	OPT_INTERACTIVE: {Type: options.BOOL},
 	OPT_SERVER:      {Type: options.BOOL},
 	OPT_NO_COLOR:    {Type: options.BOOL},
@@ -249,7 +252,7 @@ func addExtraOptions(m options.Map) {
 		STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 		STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
 		STORAGE_S3_HOST, STORAGE_S3_ACCESS_KEY, STORAGE_S3_SECRET_KEY,
-		STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+		STORAGE_S3_BUCKET, STORAGE_S3_PATH, STORAGE_S3_PART_SIZE,
 		JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 		CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
 		TEMP_DIR,
@@ -284,7 +287,7 @@ func loadConfig() error {
 			STORAGE_SFTP_HOST, STORAGE_SFTP_USER, STORAGE_SFTP_KEY,
 			STORAGE_SFTP_PATH, STORAGE_SFTP_MODE,
 			STORAGE_S3_HOST, STORAGE_S3_REGION, STORAGE_S3_ACCESS_KEY,
-			STORAGE_S3_SECRET_KEY, STORAGE_S3_BUCKET, STORAGE_S3_PATH,
+			STORAGE_S3_SECRET_KEY, STORAGE_S3_BUCKET, STORAGE_S3_PATH, STORAGE_S3_PART_SIZE,
 			JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 			CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
 			TEMP_DIR,
@@ -334,6 +337,8 @@ func validateConfig() error {
 			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
 			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
+			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Greater, 5},
+			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Less, 5_000},
 		)
 	}
 
@@ -498,6 +503,7 @@ func genUsage(section string) *usage.Info {
 	info.AddOption(OPT_CONFIG, "Path to configuration file", "file")
 	info.AddOption(OPT_INTERACTIVE, "Interactive mode")
 	info.AddOption(OPT_SERVER, "Server mode")
+	info.AddOption(OPT_FORCE, "Force backup generation")
 	info.AddOption(OPT_NO_COLOR, "Disable colors in output")
 	info.AddOption(OPT_HELP, "Show this help message")
 	info.AddOption(OPT_VER, "Show version")
@@ -524,6 +530,7 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, STORAGE_S3_SECRET_KEY, "S3 access secret key", "key")
 		addUnitedOption(info, STORAGE_S3_BUCKET, "S3 bucket", "name")
 		addUnitedOption(info, STORAGE_S3_PATH, "Path for backups", "path")
+		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size (in MB)", "num")
 		addUnitedOption(info, JIRA_OUTPUT_FILE, "Jira backup output file name template", "template")
 		addUnitedOption(info, JIRA_INCLUDE_ATTACHMENTS, "Include attachments to Jira backup", "yes/no")
 		addUnitedOption(info, JIRA_CLOUD_FORMAT, "Create Jira backup for Cloud", "yes/no")

@@ -73,6 +73,9 @@
   # Path to directory with backups
   path:
 
+  # Part size in MB (default: 32)
+  part-size: 32
+
 [jira]
   
   # Backup file name with date tags (default: jira-backup-%Y-%m-%d.zip)

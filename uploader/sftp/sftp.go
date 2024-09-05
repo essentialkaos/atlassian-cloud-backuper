@@ -32,12 +32,12 @@ import (
 
 // Config is configuration for SFTP uploader
 type Config struct {
+	Secret *katana.Secret
 	Host   string
 	User   string
 	Key    []byte
 	Path   string
 	Mode   os.FileMode
-	Secret *katana.Secret
 }
 
 // SFTPUploader is SFTP uploader instance

@@ -23,6 +23,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/essentialkaos/katana"
@@ -34,13 +35,15 @@ import (
 
 // Config is configuration for S3 uploader
 type Config struct {
+	Secret *katana.Secret
+
 	Host        string
 	Region      string
 	AccessKeyID string
 	SecretKey   string
 	Bucket      string
 	Path        string
-	Secret      *katana.Secret
+	PartSize    int64
 }
 
 // S3Uploader is S3 uploader instance
@@ -155,7 +158,11 @@ func (u *S3Uploader) Write(r io.ReadCloser, fileName string, fileSize int64) err
 		)),
 	})
 
-	_, err = client.PutObject(context.TODO(), &s3.PutObjectInput{
+	manager := manager.NewUploader(client, func(c *manager.Uploader) {
+		c.PartSize = u.config.PartSize * 1024 * 1024
+	})
+
+	_, err = manager.Upload(context.TODO(), &s3.PutObjectInput{
 		Bucket: aws.String(u.config.Bucket),
 		Key:    aws.String(outputFile),
 		Body:   rr,
