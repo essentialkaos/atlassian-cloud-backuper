@@ -10,7 +10,7 @@ require (
 	github.com/essentialkaos/ek/v13 v13.3.5
 	github.com/essentialkaos/katana v0.2.0
 	github.com/pkg/sftp v1.13.6
-	golang.org/x/crypto v0.26.0
+	golang.org/x/crypto v0.27.0
 )
 
 require (
@@ -26,5 +26,5 @@ require (
 	github.com/essentialkaos/depsy v1.3.0 // indirect
 	github.com/essentialkaos/sio v1.0.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
 )
