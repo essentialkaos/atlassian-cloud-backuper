@@ -5,9 +5,9 @@ toolchain go1.22.8
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.31.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.37
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.26
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.64.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.38
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.27
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.64.1
 	github.com/essentialkaos/ek/v13 v13.5.1
 	github.com/essentialkaos/katana v0.3.0
 	github.com/pkg/sftp v1.13.6
