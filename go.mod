@@ -7,8 +7,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.33
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0
-	github.com/essentialkaos/ek/v13 v13.8.1
-	github.com/essentialkaos/katana v0.3.1
+	github.com/essentialkaos/ek/v13 v13.9.0
+	github.com/essentialkaos/katana v0.4.0
 	github.com/pkg/sftp v1.13.6
 	golang.org/x/crypto v0.28.0
 )
