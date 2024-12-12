@@ -223,10 +223,9 @@ func (b *ConfluenceBackuper) GetReader(backupFile string) (io.ReadCloser, error)
 	log.Debug("Downloading file from %s", backupFileURL)
 
 	resp, err := req.Request{
-		URL:               backupFileURL,
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		AutoDiscard:       true,
+		URL:         backupFileURL,
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		AutoDiscard: true,
 	}.Get()
 
 	if err != nil {
@@ -245,11 +244,10 @@ func (b *ConfluenceBackuper) GetReader(backupFile string) (io.ReadCloser, error)
 // startBackup starts backup process
 func (b *ConfluenceBackuper) startBackup() error {
 	resp, err := req.Request{
-		URL:               b.config.AccountURL() + "/wiki/rest/obm/1.0/runbackup",
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		Accept:            req.CONTENT_TYPE_JSON,
-		ContentType:       req.CONTENT_TYPE_JSON,
+		URL:         b.config.AccountURL() + "/wiki/rest/obm/1.0/runbackup",
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		Accept:      req.CONTENT_TYPE_JSON,
+		ContentType: req.CONTENT_TYPE_JSON,
 		Body: &BackupPrefs{
 			WithAttachments: b.config.WithAttachments,
 			ForCloud:        b.config.ForCloud,
@@ -270,12 +268,11 @@ func (b *ConfluenceBackuper) startBackup() error {
 // getBackupProgress returns backup progress info
 func (b *ConfluenceBackuper) getBackupProgress() (*BackupProgressInfo, error) {
 	resp, err := req.Request{
-		URL:               b.config.AccountURL() + "/wiki/rest/obm/1.0/getprogress",
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		Accept:            req.CONTENT_TYPE_JSON,
-		ContentType:       req.CONTENT_TYPE_JSON,
-		AutoDiscard:       true,
+		URL:         b.config.AccountURL() + "/wiki/rest/obm/1.0/getprogress",
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		Accept:      req.CONTENT_TYPE_JSON,
+		ContentType: req.CONTENT_TYPE_JSON,
+		AutoDiscard: true,
 	}.Get()
 
 	if err != nil {
