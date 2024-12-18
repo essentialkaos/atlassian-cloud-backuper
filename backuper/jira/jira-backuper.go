@@ -149,6 +149,10 @@ func (b *JiraBackuper) Progress(taskID string) (string, error) {
 			return "", fmt.Errorf("Can't download backup: backup task took too much time")
 		}
 
+		if progressInfo == nil {
+			continue
+		}
+
 		b.dispatcher.Dispatch(
 			backuper.EVENT_BACKUP_PROGRESS,
 			&backuper.ProgressInfo{Message: progressInfo.Message, Progress: progressInfo.Progress},
