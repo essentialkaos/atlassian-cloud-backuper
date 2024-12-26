@@ -72,11 +72,11 @@ install -pDm 644 %{name}/common/%{name}.cron \
 
 install -pDm 644 %{name}/common/%{name}-confluence.service \
                  %{buildroot}%{_unitdir}/%{name}-confluence.service
-install -pDm 644 %{name}/common/%{name}-confluence.service \
+install -pDm 644 %{name}/common/%{name}-confluence.timer \
                  %{buildroot}%{_unitdir}/%{name}-confluence.timer
 install -pDm 644 %{name}/common/%{name}-jira.service \
                  %{buildroot}%{_unitdir}/%{name}-jira.service
-install -pDm 644 %{name}/common/%{name}-jira.service \
+install -pDm 644 %{name}/common/%{name}-jira.timer \
                  %{buildroot}%{_unitdir}/%{name}-jira.timer
 
 # Generate man page
