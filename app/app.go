@@ -407,7 +407,7 @@ func setupLogger() error {
 func setupTemp() error {
 	var err error
 
-	temp, err = tmp.NewTemp(knfu.GetS(TEMP_DIR, "/var/tmp"))
+	temp, err = tmp.NewTemp(knfu.GetS(TEMP_DIR, os.TempDir()))
 
 	if err != nil {
 		return fmt.Errorf("Can't setup temporary data directory: %w", err)
