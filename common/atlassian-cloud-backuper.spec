@@ -114,6 +114,7 @@ rm -rf %{buildroot}
 
 %changelog
 * Thu Dec 26 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.1-0
+- Fixed panic on empty progress info from API
 - Fixed bug with timers installation
 - Dependencies update
 - Code refactoring
