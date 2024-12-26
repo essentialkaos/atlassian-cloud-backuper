@@ -134,7 +134,7 @@ func getUploader(target string) (uploader.Uploader, error) {
 			SecretKey:   knfu.GetS(STORAGE_S3_SECRET_KEY),
 			Bucket:      knfu.GetS(STORAGE_S3_BUCKET),
 			Path:        path.Join(knfu.GetS(STORAGE_S3_PATH), target),
-			PartSize:    knfu.GetI64(STORAGE_S3_PART_SIZE, 32),
+			PartSize:    knfu.GetSZ(STORAGE_S3_PART_SIZE, 5*1024*1024),
 		})
 	}
 

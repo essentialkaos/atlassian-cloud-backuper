@@ -147,7 +147,7 @@ func Run(gitRev string, gomod []byte) {
 
 	if !errs.IsEmpty() {
 		terminal.Error("Options parsing errors:")
-		terminal.Error(errs.Error("- "))
+		terminal.Error(errs.Error(" - "))
 		os.Exit(1)
 	}
 
@@ -201,6 +201,8 @@ func Run(gitRev string, gomod []byte) {
 		log.Crit(err.Error())
 		os.Exit(1)
 	}
+
+	defer temp.Clean()
 
 	if options.GetB(OPT_SERVER) {
 		err = startServer()
@@ -339,8 +341,9 @@ func validateConfig() error {
 			{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
 			{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
 			{STORAGE_S3_BUCKET, knfv.Set, nil},
-			{STORAGE_S3_PART_SIZE, knfv.Greater, 5},
-			{STORAGE_S3_PART_SIZE, knfv.Less, 5_000},
+			{STORAGE_S3_PART_SIZE, knfv.TypeSize, nil},
+			{STORAGE_S3_PART_SIZE, knfv.SizeGreater, 1 * 1024 * 1024},
+			{STORAGE_S3_PART_SIZE, knfv.SizeLess, 100 * 1024 * 1024},
 		},
 	)
 
@@ -538,7 +541,7 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, STORAGE_S3_SECRET_KEY, "S3 access secret key", "key")
 		addUnitedOption(info, STORAGE_S3_BUCKET, "S3 bucket", "name")
 		addUnitedOption(info, STORAGE_S3_PATH, "Path for backups", "path")
-		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size (in MB)", "num")
+		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size", "size")
 		addUnitedOption(info, JIRA_OUTPUT_FILE, "Jira backup output file name template", "template")
 		addUnitedOption(info, JIRA_INCLUDE_ATTACHMENTS, "Include attachments to Jira backup", "yes/no")
 		addUnitedOption(info, JIRA_CLOUD_FORMAT, "Create Jira backup for Cloud", "yes/no")

@@ -73,8 +73,8 @@
   # Path to directory with backups
   path:
 
-  # Part size in MB (default: 32)
-  part-size: 32
+  # Uploading part size (1-100mb)
+  part-size: 5mb
 
 [jira]
   
