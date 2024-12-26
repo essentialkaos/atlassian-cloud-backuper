@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.2.0
+Version:        0.2.1
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -113,6 +113,11 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Thu Dec 26 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.1-0
+- Fixed bug with timers installation
+- Dependencies update
+- Code refactoring
+
 * Thu Sep 05 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.0-0
 - Added option (-F/--force) and query param (force) to force backup creation
 - Added multipart uploading to S3 storage
