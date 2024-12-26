@@ -101,7 +101,7 @@
 [temp]
 
   # Path to directory for temporary data
-  dir: /tmp
+  dir:
 
 [log]
 
