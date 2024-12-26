@@ -94,6 +94,17 @@ install -dDm 755 %{buildroot}%{_datarootdir}/fish/vendor_completions.d
 %clean
 rm -rf %{buildroot}
 
+%preun
+if [[ $1 -eq 0 ]] ; then
+  systemctl --no-reload disable %{name}-jira.timer &>/dev/null || :
+  systemctl --no-reload disable %{name}-confluence.timer &>/dev/null || :
+  systemctl stop %{name}-jira.timer &>/dev/null || :
+  systemctl stop %{name}-confluence.timer &>/dev/null || :
+fi
+
+%postun
+systemctl daemon-reload &>/dev/null || :
+
 ################################################################################
 
 %files
