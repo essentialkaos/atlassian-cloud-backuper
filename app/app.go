@@ -314,7 +314,7 @@ func validateConfig() error {
 		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},
-		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.LogLevels},
+		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.Levels()},
 	}
 
 	validators = validators.AddIf(
