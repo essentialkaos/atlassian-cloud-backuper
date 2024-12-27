@@ -38,7 +38,7 @@ func startApp(args options.Arguments) error {
 		addEventsHandlers(dispatcher)
 	}
 
-	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" {
+	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" && options.GetB(OPT_INTERACTIVE) {
 		fmtc.NewLine()
 		terminal.Warn("▲ Backup will be encrypted while uploading. You will not be able to use the")
 		terminal.Warn("  backup if you lose the encryption key. Keep it in a safe place.")

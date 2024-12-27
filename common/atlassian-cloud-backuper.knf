@@ -115,7 +115,7 @@
   format:
 
   # Log file mode
-  mode: 600
+  mode: 644
 
   # Default log level (debug/info/warn/error/crit)
   level: info

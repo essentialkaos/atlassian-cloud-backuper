@@ -96,7 +96,7 @@ const (
 	LOG_DIR                        = "log:dir"
 	LOG_FILE                       = "log:file"
 	LOG_FORMAT                     = "log:format"
-	LOG_MODE                       = "log:perms"
+	LOG_MODE                       = "log:mode"
 	LOG_LEVEL                      = "log:level"
 )
 
@@ -310,7 +310,7 @@ func validateConfig() error {
 		{STORAGE_TYPE, knfv.SetToAnyIgnoreCase, []string{
 			STORAGE_FS, STORAGE_SFTP, STORAGE_S3,
 		}},
-		{TEMP_DIR, knff.Perms, "DWX"},
+		{TEMP_DIR, knff.Perms, "DWRX"},
 		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},
@@ -377,7 +377,7 @@ func setupLogger() error {
 	var err error
 
 	if knfu.GetS(LOG_FILE) != "" {
-		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0640))
+		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0644))
 
 		if err != nil {
 			return err
