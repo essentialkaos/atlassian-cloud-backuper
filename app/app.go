@@ -12,7 +12,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/essentialkaos/ek/v13/errutil"
+	"github.com/essentialkaos/ek/v13/errors"
 	"github.com/essentialkaos/ek/v13/fmtc"
 	"github.com/essentialkaos/ek/v13/knf"
 	"github.com/essentialkaos/ek/v13/log"
@@ -42,7 +42,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.2.0"
+	VER  = "0.2.1"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -96,7 +96,7 @@ const (
 	LOG_DIR                        = "log:dir"
 	LOG_FILE                       = "log:file"
 	LOG_FORMAT                     = "log:format"
-	LOG_MODE                       = "log:perms"
+	LOG_MODE                       = "log:mode"
 	LOG_LEVEL                      = "log:level"
 )
 
@@ -147,7 +147,7 @@ func Run(gitRev string, gomod []byte) {
 
 	if !errs.IsEmpty() {
 		terminal.Error("Options parsing errors:")
-		terminal.Error(errs.String())
+		terminal.Error(errs.Error(" - "))
 		os.Exit(1)
 	}
 
@@ -178,7 +178,7 @@ func Run(gitRev string, gomod []byte) {
 		os.Exit(0)
 	}
 
-	err := errutil.Chain(
+	err := errors.Chain(
 		loadConfig,
 		validateConfig,
 		setupLogger,
@@ -192,7 +192,7 @@ func Run(gitRev string, gomod []byte) {
 	log.Divider()
 	log.Aux("%s %s starting…", APP, VER)
 
-	err = errutil.Chain(
+	err = errors.Chain(
 		setupTemp,
 		setupReq,
 	)
@@ -201,6 +201,8 @@ func Run(gitRev string, gomod []byte) {
 		log.Crit(err.Error())
 		os.Exit(1)
 	}
+
+	defer temp.Clean()
 
 	if options.GetB(OPT_SERVER) {
 		err = startServer()
@@ -300,7 +302,7 @@ func loadConfig() error {
 
 // validateConfig validates configuration file values
 func validateConfig() error {
-	validators := []*knf.Validator{
+	validators := knf.Validators{
 		{ACCESS_ACCOUNT, knfv.Set, nil},
 		{ACCESS_EMAIL, knfv.Set, nil},
 		{ACCESS_API_KEY, knfv.Set, nil},
@@ -308,58 +310,63 @@ func validateConfig() error {
 		{STORAGE_TYPE, knfv.SetToAnyIgnoreCase, []string{
 			STORAGE_FS, STORAGE_SFTP, STORAGE_S3,
 		}},
+		{TEMP_DIR, knff.Perms, "DWRX"},
 		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},
-		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, []string{
-			"", "debug", "info", "warn", "error", "crit",
-		}},
-		{TEMP_DIR, knff.Perms, "DWX"},
+		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.Levels()},
 	}
 
-	switch strings.ToLower(knfu.GetS(STORAGE_TYPE)) {
-	case STORAGE_FS:
-		validators = append(validators,
-			&knf.Validator{STORAGE_FS_PATH, knff.Perms, "DRW"},
-		)
+	validators = validators.AddIf(
+		knfu.GetS(STORAGE_TYPE) == STORAGE_FS,
+		knf.Validators{
+			{STORAGE_FS_PATH, knff.Perms, "DRW"},
+		},
+	)
 
-	case STORAGE_SFTP:
-		validators = append(validators,
-			&knf.Validator{STORAGE_SFTP_HOST, knfv.Set, nil},
-			&knf.Validator{STORAGE_SFTP_USER, knfv.Set, nil},
-			&knf.Validator{STORAGE_SFTP_KEY, knfv.Set, nil},
-			&knf.Validator{STORAGE_SFTP_PATH, knfv.Set, nil},
-		)
+	validators = validators.AddIf(
+		knfu.GetS(STORAGE_TYPE) == STORAGE_SFTP,
+		knf.Validators{
+			{STORAGE_SFTP_HOST, knfv.Set, nil},
+			{STORAGE_SFTP_USER, knfv.Set, nil},
+			{STORAGE_SFTP_KEY, knfv.Set, nil},
+			{STORAGE_SFTP_PATH, knfv.Set, nil},
+		},
+	)
 
-	case STORAGE_S3:
-		validators = append(validators,
-			&knf.Validator{STORAGE_S3_HOST, knfv.Set, nil},
-			&knf.Validator{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
-			&knf.Validator{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
-			&knf.Validator{STORAGE_S3_BUCKET, knfv.Set, nil},
-			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Greater, 5},
-			&knf.Validator{STORAGE_S3_PART_SIZE, knfv.Less, 5_000},
-		)
-	}
+	validators = validators.AddIf(
+		knfu.GetS(STORAGE_TYPE) == STORAGE_S3,
+		knf.Validators{
+			{STORAGE_S3_HOST, knfv.Set, nil},
+			{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
+			{STORAGE_S3_SECRET_KEY, knfv.Set, nil},
+			{STORAGE_S3_BUCKET, knfv.Set, nil},
+			{STORAGE_S3_PART_SIZE, knfv.TypeSize, nil},
+			{STORAGE_S3_PART_SIZE, knfv.SizeGreater, 1 * 1024 * 1024},
+			{STORAGE_S3_PART_SIZE, knfv.SizeLess, 100 * 1024 * 1024},
+		},
+	)
 
-	if options.GetB(OPT_SERVER) {
-		validators = append(validators,
-			&knf.Validator{SERVER_IP, knfn.IP, nil},
-			&knf.Validator{SERVER_PORT, knfn.Port, nil},
-		)
-	}
+	validators = validators.AddIf(
+		options.GetB(OPT_SERVER),
+		knf.Validators{
+			{SERVER_IP, knfn.IP, nil},
+			{SERVER_PORT, knfn.Port, nil},
+		},
+	)
 
-	if knfu.GetS(STORAGE_ENCRYPTION_KEY) != "" {
-		validators = append(validators,
-			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenGreater, 16},
-			&knf.Validator{STORAGE_ENCRYPTION_KEY, knfv.LenLess, 96},
-		)
-	}
+	validators = validators.AddIf(
+		knfu.GetS(STORAGE_ENCRYPTION_KEY) != "",
+		knf.Validators{
+			{STORAGE_ENCRYPTION_KEY, knfv.LenGreater, 16},
+			{STORAGE_ENCRYPTION_KEY, knfv.LenLess, 96},
+		},
+	)
 
 	errs := knfu.Validate(validators)
 
-	if len(errs) > 0 {
-		return errs[0]
+	if !errs.IsEmpty() {
+		return errs.First()
 	}
 
 	return nil
@@ -370,7 +377,7 @@ func setupLogger() error {
 	var err error
 
 	if knfu.GetS(LOG_FILE) != "" {
-		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0640))
+		err = log.Set(knfu.GetS(LOG_FILE), knfu.GetM(LOG_MODE, 0644))
 
 		if err != nil {
 			return err
@@ -403,9 +410,13 @@ func setupLogger() error {
 func setupTemp() error {
 	var err error
 
-	temp, err = tmp.NewTemp(knfu.GetS(TEMP_DIR, "/tmp"))
+	temp, err = tmp.NewTemp(knfu.GetS(TEMP_DIR, os.TempDir()))
 
-	return err
+	if err != nil {
+		return fmt.Errorf("Can't setup temporary data directory: %w", err)
+	}
+
+	return nil
 }
 
 // setupReq configures HTTP request engine
@@ -530,7 +541,7 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, STORAGE_S3_SECRET_KEY, "S3 access secret key", "key")
 		addUnitedOption(info, STORAGE_S3_BUCKET, "S3 bucket", "name")
 		addUnitedOption(info, STORAGE_S3_PATH, "Path for backups", "path")
-		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size (in MB)", "num")
+		addUnitedOption(info, STORAGE_S3_PART_SIZE, "Uploading part size", "size")
 		addUnitedOption(info, JIRA_OUTPUT_FILE, "Jira backup output file name template", "template")
 		addUnitedOption(info, JIRA_INCLUDE_ATTACHMENTS, "Include attachments to Jira backup", "yes/no")
 		addUnitedOption(info, JIRA_CLOUD_FORMAT, "Create Jira backup for Cloud", "yes/no")

@@ -3,7 +3,7 @@ Description=Backup Jira data using Atlassian Cloud Backuper
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/atlassian-cloud-backuper jira
+ExecStart=/usr/bin/atlassian-cloud-backuper -F jira
 
 [Install]
 WantedBy=multi-user.target

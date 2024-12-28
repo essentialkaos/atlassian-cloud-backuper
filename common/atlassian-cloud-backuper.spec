@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.2.0
+Version:        0.2.1
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -72,11 +72,11 @@ install -pDm 644 %{name}/common/%{name}.cron \
 
 install -pDm 644 %{name}/common/%{name}-confluence.service \
                  %{buildroot}%{_unitdir}/%{name}-confluence.service
-install -pDm 644 %{name}/common/%{name}-confluence.service \
+install -pDm 644 %{name}/common/%{name}-confluence.timer \
                  %{buildroot}%{_unitdir}/%{name}-confluence.timer
 install -pDm 644 %{name}/common/%{name}-jira.service \
                  %{buildroot}%{_unitdir}/%{name}-jira.service
-install -pDm 644 %{name}/common/%{name}-jira.service \
+install -pDm 644 %{name}/common/%{name}-jira.timer \
                  %{buildroot}%{_unitdir}/%{name}-jira.timer
 
 # Generate man page
@@ -93,6 +93,17 @@ install -dDm 755 %{buildroot}%{_datarootdir}/fish/vendor_completions.d
 
 %clean
 rm -rf %{buildroot}
+
+%preun
+if [[ $1 -eq 0 ]] ; then
+  systemctl --no-reload disable %{name}-jira.timer &>/dev/null || :
+  systemctl --no-reload disable %{name}-confluence.timer &>/dev/null || :
+  systemctl stop %{name}-jira.timer &>/dev/null || :
+  systemctl stop %{name}-confluence.timer &>/dev/null || :
+fi
+
+%postun
+systemctl daemon-reload &>/dev/null || :
 
 ################################################################################
 
@@ -113,6 +124,12 @@ rm -rf %{buildroot}
 ################################################################################
 
 %changelog
+* Thu Dec 26 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.1-0
+- Fixed panic on empty progress info from API
+- Fixed bug with timers installation
+- Dependencies update
+- Code refactoring
+
 * Thu Sep 05 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.0-0
 - Added option (-F/--force) and query param (force) to force backup creation
 - Added multipart uploading to S3 storage

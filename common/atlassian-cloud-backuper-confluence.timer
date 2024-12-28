@@ -2,7 +2,7 @@
 Description=Backup Confluence data using Atlassian Cloud Backuper
 
 [Timer]
-OnCalendar=Sun *-*-* 09:00:00
+OnCalendar=Mon,Wed,Fri,Sun *-*-* 06:00:00
 RandomizedDelaySec=1h
 Persistent=true
 

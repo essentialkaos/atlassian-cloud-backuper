@@ -2,7 +2,7 @@
 Description=Backup Jira data using Atlassian Cloud Backuper
 
 [Timer]
-OnCalendar=Sun *-*-* 03:00:00
+OnCalendar=Mon,Wed,Fri,Sun *-*-* 03:00:00
 RandomizedDelaySec=1h
 Persistent=true
 

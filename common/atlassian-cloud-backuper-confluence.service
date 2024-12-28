@@ -3,7 +3,7 @@ Description=Backup Confluence data using Atlassian Cloud Backuper
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/atlassian-cloud-backuper confluence
+ExecStart=/usr/bin/atlassian-cloud-backuper -F confluence
 
 [Install]
 WantedBy=multi-user.target

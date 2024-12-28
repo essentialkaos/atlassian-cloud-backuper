@@ -43,7 +43,7 @@ type Config struct {
 	SecretKey   string
 	Bucket      string
 	Path        string
-	PartSize    int64
+	PartSize    uint64
 }
 
 // S3Uploader is S3 uploader instance
@@ -159,7 +159,7 @@ func (u *S3Uploader) Write(r io.ReadCloser, fileName string, fileSize int64) err
 	})
 
 	manager := manager.NewUploader(client, func(c *manager.Uploader) {
-		c.PartSize = u.config.PartSize * 1024 * 1024
+		c.PartSize = int64(u.config.PartSize)
 	})
 
 	_, err = manager.Upload(context.TODO(), &s3.PutObjectInput{

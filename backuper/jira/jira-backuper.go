@@ -149,6 +149,10 @@ func (b *JiraBackuper) Progress(taskID string) (string, error) {
 			return "", fmt.Errorf("Can't download backup: backup task took too much time")
 		}
 
+		if progressInfo == nil {
+			continue
+		}
+
 		b.dispatcher.Dispatch(
 			backuper.EVENT_BACKUP_PROGRESS,
 			&backuper.ProgressInfo{Message: progressInfo.Message, Progress: progressInfo.Progress},
@@ -232,10 +236,9 @@ func (b *JiraBackuper) GetReader(backupFile string) (io.ReadCloser, error) {
 	log.Debug("Downloading file from %s", backupFileURL)
 
 	resp, err := req.Request{
-		URL:               backupFileURL,
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		AutoDiscard:       true,
+		URL:         backupFileURL,
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		AutoDiscard: true,
 	}.Get()
 
 	if err != nil {
@@ -254,11 +257,10 @@ func (b *JiraBackuper) GetReader(backupFile string) (io.ReadCloser, error) {
 // startBackup starts backup process
 func (b *JiraBackuper) startBackup() (string, error) {
 	resp, err := req.Request{
-		URL:               b.config.AccountURL() + "/rest/backup/1/export/runbackup",
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		Accept:            req.CONTENT_TYPE_JSON,
-		ContentType:       req.CONTENT_TYPE_JSON,
+		URL:         b.config.AccountURL() + "/rest/backup/1/export/runbackup",
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		Accept:      req.CONTENT_TYPE_JSON,
+		ContentType: req.CONTENT_TYPE_JSON,
 		Body: &BackupPrefs{
 			WithAttachments: b.config.WithAttachments,
 			ForCloud:        b.config.ForCloud,
@@ -286,12 +288,11 @@ func (b *JiraBackuper) startBackup() (string, error) {
 // getLastTaskID returns ID of the last task for backup
 func (b *JiraBackuper) getLastTaskID() (string, error) {
 	resp, err := req.Request{
-		URL:               b.config.AccountURL() + "/rest/backup/1/export/lastTaskId",
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		Accept:            req.CONTENT_TYPE_JSON,
-		ContentType:       req.CONTENT_TYPE_JSON,
-		AutoDiscard:       true,
+		URL:         b.config.AccountURL() + "/rest/backup/1/export/lastTaskId",
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		Accept:      req.CONTENT_TYPE_JSON,
+		ContentType: req.CONTENT_TYPE_JSON,
+		AutoDiscard: true,
 	}.Get()
 
 	if err != nil {
@@ -308,13 +309,12 @@ func (b *JiraBackuper) getLastTaskID() (string, error) {
 // getTaskProgress returns progress for task
 func (b *JiraBackuper) getTaskProgress(taskID string) (*BackupProgressInfo, error) {
 	resp, err := req.Request{
-		URL:               b.config.AccountURL() + "/rest/backup/1/export/getProgress",
-		BasicAuthUsername: b.config.Email,
-		BasicAuthPassword: b.config.APIKey,
-		Accept:            req.CONTENT_TYPE_JSON,
-		ContentType:       req.CONTENT_TYPE_JSON,
-		Query:             req.Query{"taskId": taskID},
-		AutoDiscard:       true,
+		URL:         b.config.AccountURL() + "/rest/backup/1/export/getProgress",
+		Auth:        req.AuthBasic{b.config.Email, b.config.APIKey},
+		Accept:      req.CONTENT_TYPE_JSON,
+		ContentType: req.CONTENT_TYPE_JSON,
+		Query:       req.Query{"taskId": taskID},
+		AutoDiscard: true,
 	}.Get()
 
 	if err != nil {
