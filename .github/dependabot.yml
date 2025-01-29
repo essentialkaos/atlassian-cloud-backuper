@@ -20,6 +20,8 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      - dependency-name: "github.com/aws/aws-sdk-go-v2"
 
   - package-ecosystem: "github-actions"
     directory: "/"
