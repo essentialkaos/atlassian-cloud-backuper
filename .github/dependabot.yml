@@ -22,7 +22,7 @@ updates:
           - "patch"
     ignore:
       - dependency-name: "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/feature/s3"
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/service/s3"
 
   - package-ecosystem: "github-actions"
     directory: "/"
