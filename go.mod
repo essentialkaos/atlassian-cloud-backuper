@@ -4,9 +4,9 @@ go 1.23.6
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.61
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.64
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.0
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.62
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.65
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.78.1
 	github.com/essentialkaos/ek/v13 v13.19.0
 	github.com/essentialkaos/katana v0.4.1
 	github.com/pkg/sftp v1.13.7
