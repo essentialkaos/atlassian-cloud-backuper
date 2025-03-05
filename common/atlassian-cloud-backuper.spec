@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.2.1
+Version:        0.3.0
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -124,6 +124,10 @@ systemctl daemon-reload &>/dev/null || :
 ################################################################################
 
 %changelog
+* Thu Mar 06 2025 Anton Novojilov <andy@essentialkaos.com> - 0.3.0-0
+- Added support of sending pulse requests to updown.io
+- Dependencies update
+
 * Thu Dec 26 2024 Anton Novojilov <andy@essentialkaos.com> - 0.2.1-0
 - Fixed panic on empty progress info from API
 - Fixed bug with timers installation
