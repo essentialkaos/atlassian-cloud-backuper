@@ -98,6 +98,11 @@
   # Export to the cloud format
   cloud-format: true
 
+[updown-pulse]
+
+  # Send "pulse" notifications to updown.io
+  webhook:
+
 [temp]
 
   # Path to directory for temporary data

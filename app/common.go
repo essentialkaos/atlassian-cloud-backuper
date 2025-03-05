@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/log"
 	"github.com/essentialkaos/ek/v13/path"
+	"github.com/essentialkaos/ek/v13/strutil"
 	"github.com/essentialkaos/ek/v13/timeutil"
 
 	"github.com/essentialkaos/katana"
@@ -25,6 +27,7 @@ import (
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/jira"
+	"github.com/essentialkaos/atlassian-cloud-backuper/updown"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/fs"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/s3"
@@ -148,4 +151,23 @@ func readPrivateKeyData() ([]byte, error) {
 	}
 
 	return base64.StdEncoding.DecodeString(knfu.GetS(STORAGE_SFTP_KEY))
+}
+
+// sendUpdownPulse sends request to updown.io pulse
+func sendUpdownPulse(ok bool, payload string) {
+	if knfu.GetS(UPDOWN_PULSE_WEBHOOK) == "" {
+		return
+	}
+
+	log.Info("Sending pulse request to updown.io…")
+
+	err := updown.Pulse(fmt.Sprintf(
+		"%s - %s", strutil.B(ok, "OK", "NOT-OK"), payload,
+	))
+
+	if err != nil {
+		log.Error("Error while sending pulse: %v", err)
+	} else {
+		log.Info("Pulse successfully sent")
+	}
 }
