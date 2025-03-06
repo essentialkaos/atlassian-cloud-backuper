@@ -20,14 +20,14 @@ import (
 	"github.com/essentialkaos/ek/v13/strutil"
 	"github.com/essentialkaos/ek/v13/timeutil"
 
-	"github.com/essentialkaos/katana"
-
 	knfu "github.com/essentialkaos/ek/v13/knf/united"
+
+	"github.com/essentialkaos/katana"
+	"github.com/essentialkaos/updown"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/jira"
-	"github.com/essentialkaos/atlassian-cloud-backuper/updown"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/fs"
 	"github.com/essentialkaos/atlassian-cloud-backuper/uploader/s3"
@@ -161,13 +161,14 @@ func sendUpdownPulse(ok bool, payload string) {
 
 	log.Info("Sending pulse request to updown.io…")
 
-	err := updown.Pulse(fmt.Sprintf(
-		"%s - %s", strutil.B(ok, "OK", "NOT-OK"), payload,
-	))
+	uuid, err := updown.SendPulse(
+		knfu.GetS(UPDOWN_PULSE_WEBHOOK),
+		fmt.Sprintf("%s - %s", strutil.B(ok, "OK", "NOT-OK"), payload),
+	)
 
 	if err != nil {
 		log.Error("Error while sending pulse: %v", err)
 	} else {
-		log.Info("Pulse successfully sent")
+		log.Info("Pulse successfully sent (%s)", uuid)
 	}
 }

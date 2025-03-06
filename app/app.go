@@ -35,8 +35,6 @@ import (
 	knfv "github.com/essentialkaos/ek/v13/knf/validators"
 	knff "github.com/essentialkaos/ek/v13/knf/validators/fs"
 	knfn "github.com/essentialkaos/ek/v13/knf/validators/network"
-
-	"github.com/essentialkaos/atlassian-cloud-backuper/updown"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -208,7 +206,6 @@ func Run(gitRev string, gomod []byte) {
 	err = errors.Chain(
 		setupTemp,
 		setupReq,
-		setupUpdownPulse,
 	)
 
 	if err != nil {
@@ -443,15 +440,6 @@ func setupTemp() error {
 // setupReq configures HTTP request engine
 func setupReq() error {
 	req.SetUserAgent("AtlassianCloudBackuper", VER)
-	return nil
-}
-
-// setupUpdownPulse setups updown pulse client
-func setupUpdownPulse() error {
-	if knf.HasProp(UPDOWN_PULSE_WEBHOOK) {
-		updown.Webhook = knf.GetS(UPDOWN_PULSE_WEBHOOK)
-	}
-
 	return nil
 }
 
