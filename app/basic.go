@@ -2,7 +2,7 @@ package app
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                         Copyright (c) 2024 ESSENTIAL KAOS                          //
+//                         Copyright (c) 2025 ESSENTIAL KAOS                          //
 //      Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>     //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -51,6 +51,7 @@ func startApp(args options.Arguments) error {
 	bkpr, err := getBackuper(target)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		return fmt.Errorf("Can't start backuping process: %w", err)
 	}
 
@@ -68,6 +69,7 @@ func startApp(args options.Arguments) error {
 
 	if err != nil {
 		spinner.Done(false)
+		sendUpdownPulse(false, err.Error())
 		return fmt.Errorf("Can't create temporary directory: %w", err)
 	}
 
@@ -77,6 +79,7 @@ func startApp(args options.Arguments) error {
 
 	if err != nil {
 		spinner.Done(false)
+		sendUpdownPulse(false, err.Error())
 		return fmt.Errorf("Error while backuping process: %w", err)
 	}
 
@@ -86,8 +89,11 @@ func startApp(args options.Arguments) error {
 
 	if err != nil {
 		spinner.Done(false)
+		sendUpdownPulse(false, err.Error())
 		return fmt.Errorf("Error while uploading process: %w", err)
 	}
+
+	sendUpdownPulse(true, "ok")
 
 	return nil
 }

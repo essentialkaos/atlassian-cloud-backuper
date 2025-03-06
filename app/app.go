@@ -2,7 +2,7 @@ package app
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                         Copyright (c) 2024 ESSENTIAL KAOS                          //
+//                         Copyright (c) 2025 ESSENTIAL KAOS                          //
 //      Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>     //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -42,7 +42,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.2.1"
+	VER  = "0.3.0"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -64,40 +64,51 @@ const (
 )
 
 const (
-	ACCESS_ACCOUNT                 = "access:account"
-	ACCESS_EMAIL                   = "access:email"
-	ACCESS_API_KEY                 = "access:api-key"
-	SERVER_IP                      = "server:ip"
-	SERVER_PORT                    = "server:port"
-	SERVER_ACCESS_TOKEN            = "server:access-token"
-	STORAGE_TYPE                   = "storage:type"
-	STORAGE_ENCRYPTION_KEY         = "storage:encryption-key"
-	STORAGE_FS_PATH                = "storage-fs:path"
-	STORAGE_FS_MODE                = "storage-fs:mode"
-	STORAGE_SFTP_HOST              = "storage-sftp:host"
-	STORAGE_SFTP_USER              = "storage-sftp:user"
-	STORAGE_SFTP_KEY               = "storage-sftp:key"
-	STORAGE_SFTP_PATH              = "storage-sftp:path"
-	STORAGE_SFTP_MODE              = "storage-sftp:mode"
-	STORAGE_S3_HOST                = "storage-s3:host"
-	STORAGE_S3_REGION              = "storage-s3:region"
-	STORAGE_S3_ACCESS_KEY          = "storage-s3:access-key"
-	STORAGE_S3_SECRET_KEY          = "storage-s3:secret-key"
-	STORAGE_S3_BUCKET              = "storage-s3:bucket"
-	STORAGE_S3_PATH                = "storage-s3:path"
-	STORAGE_S3_PART_SIZE           = "storage-s3:part-size"
-	JIRA_OUTPUT_FILE               = "jira:output-file"
-	JIRA_INCLUDE_ATTACHMENTS       = "jira:include-attachments"
-	JIRA_CLOUD_FORMAT              = "jira:cloud-format"
+	ACCESS_ACCOUNT = "access:account"
+	ACCESS_EMAIL   = "access:email"
+	ACCESS_API_KEY = "access:api-key"
+
+	SERVER_IP           = "server:ip"
+	SERVER_PORT         = "server:port"
+	SERVER_ACCESS_TOKEN = "server:access-token"
+
+	STORAGE_TYPE           = "storage:type"
+	STORAGE_ENCRYPTION_KEY = "storage:encryption-key"
+
+	STORAGE_FS_PATH = "storage-fs:path"
+	STORAGE_FS_MODE = "storage-fs:mode"
+
+	STORAGE_SFTP_HOST = "storage-sftp:host"
+	STORAGE_SFTP_USER = "storage-sftp:user"
+	STORAGE_SFTP_KEY  = "storage-sftp:key"
+	STORAGE_SFTP_PATH = "storage-sftp:path"
+	STORAGE_SFTP_MODE = "storage-sftp:mode"
+
+	STORAGE_S3_HOST       = "storage-s3:host"
+	STORAGE_S3_REGION     = "storage-s3:region"
+	STORAGE_S3_ACCESS_KEY = "storage-s3:access-key"
+	STORAGE_S3_SECRET_KEY = "storage-s3:secret-key"
+	STORAGE_S3_BUCKET     = "storage-s3:bucket"
+	STORAGE_S3_PATH       = "storage-s3:path"
+	STORAGE_S3_PART_SIZE  = "storage-s3:part-size"
+
+	JIRA_OUTPUT_FILE         = "jira:output-file"
+	JIRA_INCLUDE_ATTACHMENTS = "jira:include-attachments"
+	JIRA_CLOUD_FORMAT        = "jira:cloud-format"
+
 	CONFLUENCE_OUTPUT_FILE         = "confluence:output-file"
 	CONFLUENCE_INCLUDE_ATTACHMENTS = "confluence:include-attachments"
 	CONFLUENCE_CLOUD_FORMAT        = "confluence:cloud-format"
-	TEMP_DIR                       = "temp:dir"
-	LOG_DIR                        = "log:dir"
-	LOG_FILE                       = "log:file"
-	LOG_FORMAT                     = "log:format"
-	LOG_MODE                       = "log:mode"
-	LOG_LEVEL                      = "log:level"
+
+	UPDOWN_PULSE_WEBHOOK = "updown-pulse:webhook"
+
+	TEMP_DIR = "temp:dir"
+
+	LOG_DIR    = "log:dir"
+	LOG_FILE   = "log:file"
+	LOG_FORMAT = "log:format"
+	LOG_MODE   = "log:mode"
+	LOG_LEVEL  = "log:level"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -257,6 +268,7 @@ func addExtraOptions(m options.Map) {
 		STORAGE_S3_BUCKET, STORAGE_S3_PATH, STORAGE_S3_PART_SIZE,
 		JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 		CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
+		UPDOWN_PULSE_WEBHOOK,
 		TEMP_DIR,
 		LOG_FORMAT, LOG_LEVEL,
 	)
@@ -292,6 +304,7 @@ func loadConfig() error {
 			STORAGE_S3_SECRET_KEY, STORAGE_S3_BUCKET, STORAGE_S3_PATH, STORAGE_S3_PART_SIZE,
 			JIRA_OUTPUT_FILE, JIRA_INCLUDE_ATTACHMENTS, JIRA_CLOUD_FORMAT,
 			CONFLUENCE_OUTPUT_FILE, CONFLUENCE_INCLUDE_ATTACHMENTS, CONFLUENCE_CLOUD_FORMAT,
+			UPDOWN_PULSE_WEBHOOK,
 			TEMP_DIR,
 			LOG_DIR, LOG_FILE, LOG_MODE, LOG_LEVEL,
 		)
@@ -307,10 +320,15 @@ func validateConfig() error {
 		{ACCESS_EMAIL, knfv.Set, nil},
 		{ACCESS_API_KEY, knfv.Set, nil},
 		{ACCESS_EMAIL, knfn.Mail, nil},
+
 		{STORAGE_TYPE, knfv.SetToAnyIgnoreCase, []string{
 			STORAGE_FS, STORAGE_SFTP, STORAGE_S3,
 		}},
+
+		{UPDOWN_PULSE_WEBHOOK, knfn.URL, nil},
+
 		{TEMP_DIR, knff.Perms, "DWRX"},
+
 		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
 			"", "text", "json",
 		}},

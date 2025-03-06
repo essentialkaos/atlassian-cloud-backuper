@@ -2,7 +2,7 @@ package app
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                         Copyright (c) 2024 ESSENTIAL KAOS                          //
+//                         Copyright (c) 2025 ESSENTIAL KAOS                          //
 //      Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>     //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -71,6 +71,7 @@ func createBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	bkpr, err := getBackuper(target)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't create backuper instance: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
@@ -79,12 +80,15 @@ func createBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	taskID, err := bkpr.Start(force)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't create backup: %v", err)
 		rw.WriteHeader(http.StatusBadGateway)
 		return
 	}
 
 	log.Info("Backup request successfully created", log.F{"task-id", taskID})
+
+	sendUpdownPulse(true, "create-backup")
 
 	rw.WriteHeader(http.StatusOK)
 }
@@ -103,6 +107,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	err := validateRequestQuery(target, token)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Invalid request query: %v", err.Error())
 		rw.WriteHeader(http.StatusBadRequest)
 		return
@@ -111,6 +116,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	bkpr, err := getBackuper(target)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't create backuper instance: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
@@ -119,6 +125,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	backupFile, err := bkpr.GetBackupFile()
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't find backup file: %v", err)
 		rw.WriteHeader(http.StatusBadGateway)
 		return
@@ -129,6 +136,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	br, err := bkpr.GetReader(backupFile)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't get reader for backup file: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
@@ -137,6 +145,7 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	updr, err := getUploader(target)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't create uploader instance: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
@@ -154,12 +163,15 @@ func downloadBackupHandler(rw http.ResponseWriter, r *http.Request) {
 	err = updr.Write(br, outputFile, 0)
 
 	if err != nil {
+		sendUpdownPulse(false, err.Error())
 		log.Error("Can't upload backup file: %v", err, lf)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	log.Info("Backup successfully uploaded", lf)
+
+	sendUpdownPulse(true, "upload-backup")
 
 	rw.WriteHeader(http.StatusOK)
 }

@@ -2,7 +2,7 @@ package app
 
 // ////////////////////////////////////////////////////////////////////////////////// //
 //                                                                                    //
-//                         Copyright (c) 2024 ESSENTIAL KAOS                          //
+//                         Copyright (c) 2025 ESSENTIAL KAOS                          //
 //      Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>     //
 //                                                                                    //
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -15,12 +15,15 @@ import (
 	"time"
 
 	"github.com/essentialkaos/ek/v13/fsutil"
+	"github.com/essentialkaos/ek/v13/log"
 	"github.com/essentialkaos/ek/v13/path"
+	"github.com/essentialkaos/ek/v13/strutil"
 	"github.com/essentialkaos/ek/v13/timeutil"
 
-	"github.com/essentialkaos/katana"
-
 	knfu "github.com/essentialkaos/ek/v13/knf/united"
+
+	"github.com/essentialkaos/katana"
+	"github.com/essentialkaos/updown"
 
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper"
 	"github.com/essentialkaos/atlassian-cloud-backuper/backuper/confluence"
@@ -148,4 +151,24 @@ func readPrivateKeyData() ([]byte, error) {
 	}
 
 	return base64.StdEncoding.DecodeString(knfu.GetS(STORAGE_SFTP_KEY))
+}
+
+// sendUpdownPulse sends request to updown.io pulse
+func sendUpdownPulse(ok bool, payload string) {
+	if knfu.GetS(UPDOWN_PULSE_WEBHOOK) == "" {
+		return
+	}
+
+	log.Info("Sending pulse request to updown.io…")
+
+	uuid, err := updown.SendPulse(
+		knfu.GetS(UPDOWN_PULSE_WEBHOOK),
+		fmt.Sprintf("%s - %s", strutil.B(ok, "OK", "NOT-OK"), payload),
+	)
+
+	if err != nil {
+		log.Error("Error while sending pulse: %v", err)
+	} else {
+		log.Info("Pulse successfully sent (%s)", uuid)
+	}
 }

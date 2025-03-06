@@ -1,7 +1,6 @@
 <p align="center"><a href="#readme"><img src=".github/images/card.svg"/></a></p>
 
 <p align="center">
-  <a href="https://kaos.sh/l/atlassian-cloud-backuper"><img src="https://kaos.sh/l/c742a6f5789762426f97.svg" alt="Code Climate Maintainability" /></a>
   <a href="https://kaos.sh/y/atlassian-cloud-backuper"><img src="https://kaos.sh/y/1fc3510176ab43c6a8cd1f8faf0ad309.svg" alt="Codacy badge" /></a>
   <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://kaos.sh/w/atlassian-cloud-backuper/ci.svg" alt="GitHub Actions CI Status" /></a>
   <a href="https://kaos.sh/w/atlassian-cloud-backuper/codeql"><img src="https://kaos.sh/w/atlassian-cloud-backuper/codeql.svg" alt="GitHub Actions CodeQL Status" /></a>
@@ -66,4 +65,4 @@ Before contributing to this project please read our [Contributing Guidelines](ht
 
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-<p align="center"><a href="https://essentialkaos.com"><img src="https://gh.kaos.st/ekgh.svg"/></a></p>
+<p align="center"><a href="https://kaos.dev"><img src="https://raw.githubusercontent.com/essentialkaos/.github/refs/heads/master/images/ekgh.svg"/></a></p>
