@@ -10,7 +10,7 @@ require (
 	github.com/essentialkaos/ek/v13 v13.20.3
 	github.com/essentialkaos/katana v0.4.1
 	github.com/essentialkaos/updown v0.1.0
-	github.com/pkg/sftp v1.13.7
+	github.com/pkg/sftp v1.13.8
 	golang.org/x/crypto v0.36.0
 )
 
