@@ -2,12 +2,14 @@ module github.com/essentialkaos/atlassian-cloud-backuper
 
 go 1.23.6
 
+toolchain go1.24.1
+
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.64
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.65
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.44
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.74.1
-	github.com/essentialkaos/ek/v13 v13.20.5
+	github.com/essentialkaos/ek/v13 v13.21.0
 	github.com/essentialkaos/katana v0.4.1
 	github.com/essentialkaos/updown v0.1.0
 	github.com/pkg/sftp v1.13.9
