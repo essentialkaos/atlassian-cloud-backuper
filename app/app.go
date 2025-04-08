@@ -18,6 +18,7 @@ import (
 	"github.com/essentialkaos/ek/v13/log"
 	"github.com/essentialkaos/ek/v13/options"
 	"github.com/essentialkaos/ek/v13/req"
+	"github.com/essentialkaos/ek/v13/strutil"
 	"github.com/essentialkaos/ek/v13/support"
 	"github.com/essentialkaos/ek/v13/support/deps"
 	"github.com/essentialkaos/ek/v13/system/container"
@@ -35,6 +36,8 @@ import (
 	knfv "github.com/essentialkaos/ek/v13/knf/validators"
 	knff "github.com/essentialkaos/ek/v13/knf/validators/fs"
 	knfn "github.com/essentialkaos/ek/v13/knf/validators/network"
+
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -42,7 +45,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.0"
+	VER  = "0.3.1"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -201,9 +204,10 @@ func Run(gitRev string, gomod []byte) {
 	}
 
 	log.Divider()
-	log.Aux("%s %s starting…", APP, VER)
+	log.Aux("%s %s (%s) starting…", APP, VER, strutil.Q(gitRev, "—"))
 
 	err = errors.Chain(
+		setupGoMaxProcs,
 		setupTemp,
 		setupReq,
 	)
@@ -329,9 +333,7 @@ func validateConfig() error {
 
 		{TEMP_DIR, knff.Perms, "DWRX"},
 
-		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
-			"", "text", "json",
-		}},
+		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{"", "text", "json"}},
 		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.Levels()},
 	}
 
@@ -419,6 +421,25 @@ func setupLogger() error {
 		default:
 			return fmt.Errorf("Unknown log format %q", knfu.GetS(LOG_FORMAT))
 		}
+	}
+
+	return nil
+}
+
+// setupGoMaxProcs sets GOMAXPROCS to match the configured CPU quota
+func setupGoMaxProcs() error {
+	if !container.IsContainer() {
+		return nil
+	}
+
+	_, err := maxprocs.Set(
+		maxprocs.Logger(func(f string, a ...interface{}) {
+			log.Info("Updating GOMAXPROCS: "+f, a...)
+		}),
+	)
+
+	if err != nil {
+		return fmt.Errorf("Can't set GOMAXPROCS: %w", err)
 	}
 
 	return nil
@@ -524,7 +545,12 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 
 // genUsage generates usage info
 func genUsage(section string) *usage.Info {
-	info := usage.NewInfo("", "target")
+	info := usage.NewInfo(
+		"",
+		fmt.Sprintf("{%s}", strings.Join([]string{
+			TARGET_JIRA, TARGET_CONFLUENCE,
+		}, "|")),
+	)
 
 	info.WrapLen = 100
 	info.AppNameColorTag = colorTagApp
@@ -569,6 +595,10 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, TEMP_DIR, "Path to directory for temporary data", "path")
 		addUnitedOption(info, LOG_FORMAT, "Log format", "text/json")
 		addUnitedOption(info, LOG_LEVEL, "Log level", "level")
+	} else {
+		info.AddExample("jira", "Run Jira data backup")
+		info.AddExample("confluence", "Run Confluence data backup")
+		info.AddExample("jira -I -F", "Run Jira data backup in interactive mode")
 	}
 
 	return info

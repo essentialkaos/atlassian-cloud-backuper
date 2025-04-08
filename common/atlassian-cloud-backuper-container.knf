@@ -73,8 +73,8 @@
   # Path to directory with backups
   path:
 
-  # Part size in MB (default: 32)
-  part-size: 32
+  # Uploading part size (1-100mb)
+  part-size: 5mb
 
 [jira]
   
@@ -105,17 +105,8 @@
 
 [log]
 
-  # Log file dir
-  dir:
-
-  # Path to log file
-  file:
-
   # Log format (text/json)
   format: json
-
-  # Log file mode
-  mode: 600
 
   # Default log level (debug/info/warn/error/crit)
   level: info
