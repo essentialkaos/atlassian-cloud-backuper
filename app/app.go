@@ -36,6 +36,8 @@ import (
 	knfv "github.com/essentialkaos/ek/v13/knf/validators"
 	knff "github.com/essentialkaos/ek/v13/knf/validators/fs"
 	knfn "github.com/essentialkaos/ek/v13/knf/validators/network"
+
+	"go.uber.org/automaxprocs/maxprocs"
 )
 
 // ////////////////////////////////////////////////////////////////////////////////// //
@@ -43,7 +45,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.0"
+	VER  = "0.3.1"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -205,6 +207,7 @@ func Run(gitRev string, gomod []byte) {
 	log.Aux("%s %s (%s) starting…", APP, VER, strutil.Q(gitRev, "—"))
 
 	err = errors.Chain(
+		setupGoMaxProcs,
 		setupTemp,
 		setupReq,
 	)
@@ -418,6 +421,25 @@ func setupLogger() error {
 		default:
 			return fmt.Errorf("Unknown log format %q", knfu.GetS(LOG_FORMAT))
 		}
+	}
+
+	return nil
+}
+
+// setupGoMaxProcs sets GOMAXPROCS to match the configured CPU quota
+func setupGoMaxProcs() error {
+	if !container.IsContainer() {
+		return nil
+	}
+
+	_, err := maxprocs.Set(
+		maxprocs.Logger(func(f string, a ...interface{}) {
+			log.Info("Updating GOMAXPROCS: "+f, a...)
+		}),
+	)
+
+	if err != nil {
+		return fmt.Errorf("Can't set GOMAXPROCS: %w", err)
 	}
 
 	return nil

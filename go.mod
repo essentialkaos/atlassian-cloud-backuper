@@ -11,6 +11,7 @@ require (
 	github.com/essentialkaos/katana v0.4.1
 	github.com/essentialkaos/updown v0.1.1
 	github.com/pkg/sftp v1.13.9
+	go.uber.org/automaxprocs v1.6.0
 	golang.org/x/crypto v0.37.0
 )
 
