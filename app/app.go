@@ -523,7 +523,12 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 
 // genUsage generates usage info
 func genUsage(section string) *usage.Info {
-	info := usage.NewInfo("", "{jira|confluence}")
+	info := usage.NewInfo(
+		"",
+		fmt.Sprintf("{%s}", strings.Join([]string{
+			TARGET_JIRA, TARGET_CONFLUENCE,
+		}, "|")),
+	)
 
 	info.WrapLen = 100
 	info.AppNameColorTag = colorTagApp
@@ -568,6 +573,10 @@ func genUsage(section string) *usage.Info {
 		addUnitedOption(info, TEMP_DIR, "Path to directory for temporary data", "path")
 		addUnitedOption(info, LOG_FORMAT, "Log format", "text/json")
 		addUnitedOption(info, LOG_LEVEL, "Log level", "level")
+	} else {
+		info.AddExample("jira", "Run Jira data backup")
+		info.AddExample("confluence", "Run Confluence data backup")
+		info.AddExample("jira -I -F", "Run Jira data backup in interactive mode")
 	}
 
 	return info
