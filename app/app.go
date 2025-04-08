@@ -18,6 +18,7 @@ import (
 	"github.com/essentialkaos/ek/v13/log"
 	"github.com/essentialkaos/ek/v13/options"
 	"github.com/essentialkaos/ek/v13/req"
+	"github.com/essentialkaos/ek/v13/strutil"
 	"github.com/essentialkaos/ek/v13/support"
 	"github.com/essentialkaos/ek/v13/support/deps"
 	"github.com/essentialkaos/ek/v13/system/container"
@@ -201,7 +202,7 @@ func Run(gitRev string, gomod []byte) {
 	}
 
 	log.Divider()
-	log.Aux("%s %s starting…", APP, VER)
+	log.Aux("%s %s (%s) starting…", APP, VER, strutil.Q(gitRev, "—"))
 
 	err = errors.Chain(
 		setupTemp,
@@ -329,9 +330,7 @@ func validateConfig() error {
 
 		{TEMP_DIR, knff.Perms, "DWRX"},
 
-		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{
-			"", "text", "json",
-		}},
+		{LOG_FORMAT, knfv.SetToAnyIgnoreCase, []string{"", "text", "json"}},
 		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.Levels()},
 	}
 
@@ -524,7 +523,7 @@ func addUnitedOption(info *usage.Info, prop, desc, value string) {
 
 // genUsage generates usage info
 func genUsage(section string) *usage.Info {
-	info := usage.NewInfo("", "target")
+	info := usage.NewInfo("", "{jira|confluence}")
 
 	info.WrapLen = 100
 	info.AppNameColorTag = colorTagApp
