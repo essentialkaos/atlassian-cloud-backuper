@@ -43,8 +43,8 @@ github.com/essentialkaos/check v1.4.1 h1:SuxXzrbokPGTPWxGRnzy0hXvtb44mtVrdNxgPa1
 github.com/essentialkaos/check v1.4.1/go.mod h1:xQOYwFvnxfVZyt5Qvjoa1SxcRqu5VyP77pgALr3iu+M=
 github.com/essentialkaos/depsy v1.3.1 h1:00k9QcMsdPM4IzDaEFHsTHBD/zoM0oxtB5+dMUwbQa8=
 github.com/essentialkaos/depsy v1.3.1/go.mod h1:B5+7Jhv2a2RacOAxIKU2OeJp9QfZjwIpEEPI5X7auWM=
-github.com/essentialkaos/ek/v13 v13.23.1 h1:nVU2ztXlUG//aq0xnSYcRQuV21hhJg5SAjYygz3IMQo=
-github.com/essentialkaos/ek/v13 v13.23.1/go.mod h1:3pT/sIF9WF2GvxEQ+GAxt8LBBsPS9hYMfNPNp+akvRU=
+github.com/essentialkaos/ek/v13 v13.24.0 h1:ARETQq9Ttk2QlBF7VrP/k4+fMW3P0Q4+v6qZ0qebf/A=
+github.com/essentialkaos/ek/v13 v13.24.0/go.mod h1:uYJ9Vm/WnccKtCbamJ0ukMWQcANX55e742y8lS3gP+Y=
 github.com/essentialkaos/katana v0.4.1 h1:+yLk5ngPOu5SKQ7LdUQ7Bip0vD9BLU4/CzmL589wD38=
 github.com/essentialkaos/katana v0.4.1/go.mod h1:r2/CwIhVo9T8bhJd9eQlEqfZNAJJ0191s6h6LTdw2QM=
 github.com/essentialkaos/sio v1.2.0 h1:2FFXE0eZClreRkIwv1qgT1VufMXsNA2MBMtQCRB+WkE=
