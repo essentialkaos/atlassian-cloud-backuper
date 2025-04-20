@@ -54,7 +54,7 @@ func getBackuper(target string) (backuper.Backuper, error) {
 		bkpr, err = confluence.NewBackuper(bkpConfig)
 	}
 
-	return bkpr, nil
+	return bkpr, err
 }
 
 // getOutputFileName returns name for backup output file
