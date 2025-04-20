@@ -45,7 +45,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.1"
+	VER  = "0.3.2"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -217,13 +217,13 @@ func Run(gitRev string, gomod []byte) {
 		os.Exit(1)
 	}
 
-	defer temp.Clean()
-
 	if options.GetB(OPT_SERVER) {
 		err = startServer()
 	} else {
 		err = startApp(args)
 	}
+
+	temp.Clean()
 
 	if err != nil {
 		if options.GetB(OPT_INTERACTIVE) {
@@ -337,15 +337,13 @@ func validateConfig() error {
 		{LOG_LEVEL, knfv.SetToAnyIgnoreCase, log.Levels()},
 	}
 
-	validators = validators.AddIf(
-		knfu.GetS(STORAGE_TYPE) == STORAGE_FS,
+	validators = validators.AddIf(knfu.GetS(STORAGE_TYPE) == STORAGE_FS,
 		knf.Validators{
 			{STORAGE_FS_PATH, knff.Perms, "DRW"},
 		},
 	)
 
-	validators = validators.AddIf(
-		knfu.GetS(STORAGE_TYPE) == STORAGE_SFTP,
+	validators = validators.AddIf(knfu.GetS(STORAGE_TYPE) == STORAGE_SFTP,
 		knf.Validators{
 			{STORAGE_SFTP_HOST, knfv.Set, nil},
 			{STORAGE_SFTP_USER, knfv.Set, nil},
@@ -354,8 +352,7 @@ func validateConfig() error {
 		},
 	)
 
-	validators = validators.AddIf(
-		knfu.GetS(STORAGE_TYPE) == STORAGE_S3,
+	validators = validators.AddIf(knfu.GetS(STORAGE_TYPE) == STORAGE_S3,
 		knf.Validators{
 			{STORAGE_S3_HOST, knfv.Set, nil},
 			{STORAGE_S3_ACCESS_KEY, knfv.Set, nil},
@@ -367,19 +364,17 @@ func validateConfig() error {
 		},
 	)
 
-	validators = validators.AddIf(
-		options.GetB(OPT_SERVER),
+	validators = validators.AddIf(options.GetB(OPT_SERVER),
 		knf.Validators{
 			{SERVER_IP, knfn.IP, nil},
 			{SERVER_PORT, knfn.Port, nil},
 		},
 	)
 
-	validators = validators.AddIf(
-		knfu.GetS(STORAGE_ENCRYPTION_KEY) != "",
+	validators = validators.AddIf(knfu.GetS(STORAGE_ENCRYPTION_KEY) != "",
 		knf.Validators{
-			{STORAGE_ENCRYPTION_KEY, knfv.LenGreater, 16},
-			{STORAGE_ENCRYPTION_KEY, knfv.LenLess, 96},
+			{STORAGE_ENCRYPTION_KEY, knfv.LenLonger, 16},
+			{STORAGE_ENCRYPTION_KEY, knfv.LenShorter, 96},
 		},
 	)
 
@@ -412,10 +407,12 @@ func setupLogger() error {
 
 	if knfu.GetS(LOG_FORMAT) == "" && container.IsContainer() {
 		log.Global.UseJSON = true
+		log.Global.WithCaller = true
 	} else {
 		switch strings.ToLower(knfu.GetS(LOG_FORMAT)) {
 		case "json":
 			log.Global.UseJSON = true
+			log.Global.WithCaller = true
 		case "text", "":
 			// default
 		default:
