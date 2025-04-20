@@ -412,10 +412,12 @@ func setupLogger() error {
 
 	if knfu.GetS(LOG_FORMAT) == "" && container.IsContainer() {
 		log.Global.UseJSON = true
+		log.Global.WithCaller = true
 	} else {
 		switch strings.ToLower(knfu.GetS(LOG_FORMAT)) {
 		case "json":
 			log.Global.UseJSON = true
+			log.Global.WithCaller = true
 		case "text", "":
 			// default
 		default:
