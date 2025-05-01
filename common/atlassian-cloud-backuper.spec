@@ -10,7 +10,7 @@
 
 Summary:        Tool for backuping Atlassian cloud services
 Name:           atlassian-cloud-backuper
-Version:        0.3.2
+Version:        0.3.3
 Release:        0%{?dist}
 Group:          Applications/System
 License:        Apache License, Version 2.0
@@ -124,6 +124,9 @@ systemctl daemon-reload &>/dev/null || :
 ################################################################################
 
 %changelog
+* Fri May 02 2025 Anton Novojilov <andy@essentialkaos.com> - 0.3.3-0
+- Fixed bug with printing empty line to JSON log
+
 * Sun Apr 20 2025 Anton Novojilov <andy@essentialkaos.com> - 0.3.2-0
 - Add caller info if JSON format is used for logs
 - Code refactoring
