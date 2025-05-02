@@ -46,7 +46,7 @@ func startApp(args options.Arguments) error {
 
 	defer temp.Clean()
 
-	fmtc.NewLine()
+	fmtc.If(options.GetB(OPT_INTERACTIVE)).NewLine()
 
 	bkpr, err := getBackuper(target)
 

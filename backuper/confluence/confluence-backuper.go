@@ -92,7 +92,11 @@ func (b *ConfluenceBackuper) Backup(outputFile string, force bool) error {
 
 // Start creates task for backuping data
 func (b *ConfluenceBackuper) Start(force bool) (string, error) {
-	log.Info("Starting Confluence backup process for account %s…", b.config.Account)
+	log.Info(
+		"Starting Confluence backup process for account %s (forced: %t)…",
+		b.config.Account, force,
+	)
+
 	log.Info("Checking for existing backup task…")
 
 	info, _ := b.getBackupProgress()
@@ -108,7 +112,7 @@ func (b *ConfluenceBackuper) Start(force bool) (string, error) {
 		)
 	} else {
 		if force {
-			log.Info("Starting new backup…")
+			log.Info("Starting new backup (force: %t)…", force)
 		} else {
 			log.Info("No previously created backup task or task is outdated, starting new backup…")
 		}
@@ -203,7 +207,7 @@ func (b *ConfluenceBackuper) Download(backupFile, outputFile string) error {
 	err := b.downloadBackup(backupFile, outputFile)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Can't download backup file: %v", err)
 	}
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_DONE, nil)

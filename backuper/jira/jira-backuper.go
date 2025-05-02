@@ -96,7 +96,10 @@ func (b *JiraBackuper) Start(force bool) (string, error) {
 	var err error
 	var backupTaskID string
 
-	log.Info("Starting Jira backup process for account %s…", b.config.Account)
+	log.Info(
+		"Starting Jira backup process for account %s (forced: %t)…",
+		b.config.Account, force,
+	)
 
 	if !force {
 		log.Info("Checking for existing backup task…")
@@ -216,7 +219,7 @@ func (b *JiraBackuper) Download(backupFile, outputFile string) error {
 	err := b.downloadBackup(backupFile, outputFile)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Can't download backup file: %v", err)
 	}
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_DONE, nil)

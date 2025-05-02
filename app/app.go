@@ -10,6 +10,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/essentialkaos/ek/v13/errors"
@@ -45,7 +46,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.2"
+	VER  = "0.3.3"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -204,7 +205,11 @@ func Run(gitRev string, gomod []byte) {
 	}
 
 	log.Divider()
-	log.Aux("%s %s (%s) starting…", APP, VER, strutil.Q(gitRev, "—"))
+	log.Info(
+		"%s %s (%s) starting…", APP, VER, strutil.Q(gitRev, "—"),
+		log.F{"app-version", VER}, log.F{"app-revision", gitRev},
+		log.F{"app-go-ver", runtime.Version()},
+	)
 
 	err = errors.Chain(
 		setupGoMaxProcs,
@@ -414,7 +419,7 @@ func setupLogger() error {
 			log.Global.UseJSON = true
 			log.Global.WithCaller = true
 		case "text", "":
-			// default
+			log.Global.DiscardFields = true
 		default:
 			return fmt.Errorf("Unknown log format %q", knfu.GetS(LOG_FORMAT))
 		}
