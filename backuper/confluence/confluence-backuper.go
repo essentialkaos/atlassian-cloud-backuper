@@ -92,7 +92,11 @@ func (b *ConfluenceBackuper) Backup(outputFile string, force bool) error {
 
 // Start creates task for backuping data
 func (b *ConfluenceBackuper) Start(force bool) (string, error) {
-	log.Info("Starting Confluence backup process for account %s…", b.config.Account)
+	log.Info(
+		"Starting Confluence backup process for account %s (forced: %t)…",
+		b.config.Account, force,
+	)
+
 	log.Info("Checking for existing backup task…")
 
 	info, _ := b.getBackupProgress()

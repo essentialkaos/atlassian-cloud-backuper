@@ -96,7 +96,10 @@ func (b *JiraBackuper) Start(force bool) (string, error) {
 	var err error
 	var backupTaskID string
 
-	log.Info("Starting Jira backup process for account %s…", b.config.Account)
+	log.Info(
+		"Starting Jira backup process for account %s (forced: %t)…",
+		b.config.Account, force,
+	)
 
 	if !force {
 		log.Info("Checking for existing backup task…")
