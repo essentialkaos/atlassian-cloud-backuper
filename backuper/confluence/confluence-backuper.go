@@ -203,7 +203,7 @@ func (b *ConfluenceBackuper) Download(backupFile, outputFile string) error {
 	err := b.downloadBackup(backupFile, outputFile)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Can't download backup file: %v", err)
 	}
 
 	b.dispatcher.DispatchAndWait(backuper.EVENT_BACKUP_DONE, nil)
