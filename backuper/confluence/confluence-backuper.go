@@ -108,7 +108,7 @@ func (b *ConfluenceBackuper) Start(force bool) (string, error) {
 		)
 	} else {
 		if force {
-			log.Info("Starting new backup…")
+			log.Info("Starting new backup (force: %t)…", force)
 		} else {
 			log.Info("No previously created backup task or task is outdated, starting new backup…")
 		}
