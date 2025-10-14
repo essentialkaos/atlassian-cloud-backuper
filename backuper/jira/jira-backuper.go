@@ -138,12 +138,14 @@ func (b *JiraBackuper) Progress(taskID string) (string, error) {
 		progressInfo, err := b.getTaskProgress(taskID)
 
 		if err != nil {
-			log.Error("Got error while checking progress: %w", err)
+			log.Error("Got error while checking progress: %v", err)
 			errNum++
 
 			if errNum > 10 {
 				return "", fmt.Errorf("Can't download backup: too much errors")
 			}
+
+			continue
 		} else {
 			errNum = 0
 		}
