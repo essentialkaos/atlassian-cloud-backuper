@@ -46,7 +46,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.3"
+	VER  = "0.3.4"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
