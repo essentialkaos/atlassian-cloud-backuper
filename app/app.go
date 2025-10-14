@@ -211,6 +211,8 @@ func Run(gitRev string, gomod []byte) {
 		log.F{"app-go-ver", runtime.Version()},
 	)
 
+	defer log.PanicHandler("Got panic")
+
 	err = errors.Chain(
 		setupGoMaxProcs,
 		setupTemp,
