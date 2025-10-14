@@ -46,7 +46,7 @@ import (
 // Basic utility info
 const (
 	APP  = "Atlassian Cloud Backuper"
-	VER  = "0.3.3"
+	VER  = "0.3.4"
 	DESC = "Tool for backuping Atlassian cloud services (Jira and Confluence)"
 )
 
@@ -210,6 +210,8 @@ func Run(gitRev string, gomod []byte) {
 		log.F{"app-version", VER}, log.F{"app-revision", gitRev},
 		log.F{"app-go-ver", runtime.Version()},
 	)
+
+	defer log.PanicHandler("Got panic")
 
 	err = errors.Chain(
 		setupGoMaxProcs,
