@@ -1,6 +1,6 @@
 module github.com/essentialkaos/atlassian-cloud-backuper
 
-go 1.24.9
+go 1.25.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.41.3
@@ -12,7 +12,7 @@ require (
 	github.com/essentialkaos/updown v0.2.0
 	github.com/pkg/sftp v1.13.10
 	go.uber.org/automaxprocs v1.6.0
-	golang.org/x/crypto v0.48.0
+	golang.org/x/crypto v0.49.0
 )
 
 require (
@@ -28,5 +28,5 @@ require (
 	github.com/essentialkaos/depsy v1.3.1 // indirect
 	github.com/essentialkaos/sio v1.2.1 // indirect
 	github.com/kr/fs v0.1.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 )
