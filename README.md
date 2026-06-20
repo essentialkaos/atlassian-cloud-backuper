@@ -1,9 +1,27 @@
+> [!IMPORTANT]
+> ### Project Sunset Notice 🌇
+>
+> ***This project is no longer actively maintained.***
+>
+> After careful consideration, we’ve decided to sunset development and support for this repository. While it has been a valuable effort, we are no longer able to dedicate the time and resources required to maintain it at the level we consider responsible.
+>
+> #### Forking and continuation
+>
+> If you are interested in taking over maintenance or building upon this project, you are encouraged to fork it.
+>
+> #### Thank you
+>
+> We sincerely appreciate everyone who contributed, reported issues, or used this project. Your support made it worthwhile.
+> </details>
+
+----
+
 <p align="center"><a href="#readme"><img src=".github/images/card.svg"/></a></p>
 
 <p align="center">
-  <a href="https://kaos.sh/y/atlassian-cloud-backuper"><img src="https://kaos.sh/y/1fc3510176ab43c6a8cd1f8faf0ad309.svg" alt="Codacy badge" /></a>
-  <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://kaos.sh/w/atlassian-cloud-backuper/ci.svg" alt="GitHub Actions CI Status" /></a>
-  <a href="https://kaos.sh/w/atlassian-cloud-backuper/codeql"><img src="https://kaos.sh/w/atlassian-cloud-backuper/codeql.svg" alt="GitHub Actions CodeQL Status" /></a>
+  <a href="https://kaos.sh/y/atlassian-cloud-backuper"><img src="https://app.codacy.com/project/badge/Grade/1fc3510176ab43c6a8cd1f8faf0ad309" alt="Codacy badge" /></a>
+  <a href="https://kaos.sh/w/atlassian-cloud-backuper/ci"><img src="https://github.com/essentialkaos/atlassian-cloud-backuper/actions/workflows/ci.yml/badge.svg" alt="GitHub Actions CI Status" /></a>
+  <a href="https://github.com/essentialkaos/atlassian-cloud-backuper/actions/workflows/codeql.yml/badge.svg"><img src="https://kaos.sh/w/atlassian-cloud-backuper/codeql.svg" alt="GitHub Actions CodeQL Status" /></a>
   <a href="#license"><img src=".github/images/license.svg"/></a>
 </p>
 
@@ -54,8 +72,8 @@ atlassian-cloud-backuper --help container
 
 | Branch | Status |
 |--------|----------|
-| `master` | [![CI](https://kaos.sh/w/atlassian-cloud-backuper/ci.svg?branch=master)](https://kaos.sh/w/atlassian-cloud-backuper/ci?query=branch:master) |
-| `develop` | [![CI](https://kaos.sh/w/atlassian-cloud-backuper/ci.svg?branch=develop)](https://kaos.sh/w/atlassian-cloud-backuper/ci?query=branch:develop) |
+| `master` | [![CI](https://github.com/essentialkaos/atlassian-cloud-backuper/actions/workflows/ci.yml/badge.svg?branch=master)](https://kaos.sh/w/atlassian-cloud-backuper/ci?query=branch:master) |
+| `develop` | [![CI](https://github.com/essentialkaos/atlassian-cloud-backuper/actions/workflows/ci.yml/badge.svg?branch=develop)](https://kaos.sh/w/atlassian-cloud-backuper/ci?query=branch:develop) |
 
 ### Contributing
 
